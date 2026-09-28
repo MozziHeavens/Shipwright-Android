@@ -2482,6 +2482,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
         messageEntry = CustomMessage(txt, txt, txt);
         messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
+        messageEntry.AutoFormat();
     }
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
     switch (gSaveContext.language) {
