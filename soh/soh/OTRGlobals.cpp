@@ -2476,6 +2476,13 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry =
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
     }
+    if (textId == 0x2041) {
+        std::string txt = IS_DAY
+            ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
+            : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+        messageEntry = CustomMessage(txt, txt, txt);
+        messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
+    }
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
     switch (gSaveContext.language) {
         case LANGUAGE_FRA:
