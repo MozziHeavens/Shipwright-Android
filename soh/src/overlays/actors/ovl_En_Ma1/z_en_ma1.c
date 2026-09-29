@@ -343,11 +343,6 @@ s32 func_80AA08C4(EnMa1* this, PlayState* play) {
         // Asegurar que exista tanto de dia como de noche
         return 1;
     }
-        return 1;
-    }
-    if (play->sceneNum != SCENE_LON_LON_RANCH) {
-        return 0;
-    }
     if ((this->actor.shape.rot.z == 3) && malonReturnedFromCastle) {
         return 1;
     }
