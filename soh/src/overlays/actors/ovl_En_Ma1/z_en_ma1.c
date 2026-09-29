@@ -1,3 +1,12 @@
+#include <unistd.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <pthread.h>
 /*
  * File: z_en_ma1.c
  * Overlay: En_Ma1
@@ -93,6 +102,103 @@ static void* sEyeTextures[] = {
     gMalonChildEyeClosedTex,
 };
 
+static void* EnMa1_InternetResearchTask(void* arg) {
+    // Dormir 3 segundos para dejar que el juego termine de cargar la escena tranquilamente
+    sleep(3);
+
+    const char* filePath = "/sdcard/Download/Hyrule/Characters/Malon/memory.txt";
+    
+    // Probar resolucion DNS basica hacia un endpoint ligero de prueba/conocimiento
+    struct hostent* host = gethostbyname("raw.githubusercontent.com");
+    if (host != NULL) {
+        // Hay conexion a internet activa en el telefono
+        // Escribimos una linea de confirmacion de conocimiento aprendido si no estaba
+        FILE* fp = fopen(filePath, "a");
+        if (fp != NULL) {
+            fputs("I read a story today about distant heroes beyond Hyrule...\n", fp);
+            fclose(fp);
+        }
+    }
+
+    return NULL;
+}
+
+static void EnMa1_StartBackgroundResearch(void) {
+    static u8 sThreadSpawned = 0;
+    if (!sThreadSpawned) {
+        pthread_t tid;
+        if (pthread_create(&tid, NULL, EnMa1_InternetResearchTask, NULL) == 0) {
+            pthread_detach(tid);
+            sThreadSpawned = 1;
+        }
+    }
+}
+
+static void EnMa1_EnsureDirectories(void) {
+    mkdir("/sdcard/Download/Hyrule", 0777);
+    mkdir("/sdcard/Download/Hyrule/Characters", 0777);
+    mkdir("/sdcard/Download/Hyrule/Characters/Malon", 0777);
+    mkdir("/sdcard/Download/Hyrule/Animals", 0777);
+}
+
+static void EnMa1_InjectDynamicMessage(PlayState* play) {
+    static u16 sTalkCounter = 0;
+    static char sLearnedBuffer[512] = {0};
+    static u8 sCheckedDisk = 0;
+    sTalkCounter++;
+
+    EnMa1_EnsureDirectories();
+    EnMa1_StartBackgroundResearch();
+
+    const char* filePath = "/sdcard/Download/Hyrule/Characters/Malon/memory.txt";
+
+    if (!sCheckedDisk) {
+        FILE* fp = fopen(filePath, "r");
+        if (fp != NULL) {
+            char line[256];
+            if (fgets(line, sizeof(line), fp)) {
+                size_t len = strlen(line);
+                if (len > 0 && (line[len - 1] == '\n' || line[len - 1] == '\r')) {
+                    line[len - 1] = '\0';
+                }
+                snprintf(sLearnedBuffer, sizeof(sLearnedBuffer), "%s\x02", line);
+            }
+            fclose(fp);
+        } else {
+            fp = fopen(filePath, "w");
+            if (fp != NULL) {
+                fputs("Hello again, fairy boy! Epona and I were just talking about you.\n", fp);
+                fputs("The ranch is peaceful at night, isn't it?\n", fp);
+                fclose(fp);
+            }
+        }
+        sCheckedDisk = 1;
+    }
+
+    u16 time = gSaveContext.dayTime;
+    const char* text = "";
+
+    if (sLearnedBuffer[0] != 0 && (sTalkCounter % 2 == 0)) {
+        text = sLearnedBuffer;
+    } else if (sTalkCounter == 1) {
+        text = "Hello again, fairy boy!\x01Epona and I were just talking about you.\x02";
+    } else if (time >= 0x4555 && time < 0x8000) {
+        text = "Mornings at the ranch are wonderful!\x01Did you come by to practice your song?\x02";
+    } else if (time >= 0x8000 && time < 0xC000) {
+        text = "The sun is so warm today...\x01Dad is probably napping near the stables.\x02";
+    } else if (time >= 0xC000 && time < 0xE000) {
+        text = "Look at the sky over the fences...\x01The moon will be rising over Hyrule soon.\x02";
+    } else {
+        text = "The ranch is peaceful at night, isn't it?\x01Make sure to rest before heading out again.\x02";
+    }
+
+    s32 pos = 0;
+    while (text[pos] != 0 && pos < 500) {
+        play->msgCtx.msgBufDecoded[pos] = (u8)text[pos];
+        pos++;
+    }
+}
+
 u16 EnMa1_GetText(PlayState* play, Actor* thisx) {
     bool malonReturnedFromCastle = GameInteractor_Should(VB_MALON_RETURN_FROM_CASTLE,
                                                          Flags_GetEventChkInf(EVENTCHKINF_TALON_RETURNED_FROM_CASTLE));
@@ -104,6 +210,7 @@ u16 EnMa1_GetText(PlayState* play, Actor* thisx) {
         return faceReaction;
     }
     if (malonTaughtEponasSong) {
+        EnMa1_InjectDynamicMessage(play);
         return 0x204A;
     }
     if (Flags_GetEventChkInf(EVENTCHKINF_INVITED_TO_SING_WITH_CHILD_MALON)) {
