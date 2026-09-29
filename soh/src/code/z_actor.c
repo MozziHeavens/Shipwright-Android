@@ -3065,11 +3065,7 @@ void func_800315AC(PlayState* play, ActorContext* actorCtx) {
                         actor->flags &= ~ACTOR_FLAG_INSIDE_CULLING_VOLUME;
                     }
                 } else {
-                    if (func_800314B0(play, actor)) {
-                        actor->flags |= ACTOR_FLAG_INSIDE_CULLING_VOLUME;
-                    } else {
-                        actor->flags &= ~ACTOR_FLAG_INSIDE_CULLING_VOLUME;
-                    }
+                    actor->flags |= ACTOR_FLAG_INSIDE_CULLING_VOLUME;
                 }
             }
 

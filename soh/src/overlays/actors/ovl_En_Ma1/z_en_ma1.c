@@ -260,38 +260,49 @@ void func_80AA0AF4(EnMa1* this, PlayState* play) {
 void func_80AA0B74(EnMa1* this) {
     if (this->skelAnime.animation == &gMalonChildSingAnim) {
         if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE) {
-            if (this->unk_1E0 != 0) {
-                this->unk_1E0 = 0;
-                func_800F6584(0);
-            }
-        } else {
-            if (this->unk_1E0 == 0) {
-                this->unk_1E0 = 1;
-                func_800F6584(1);
-            }
+        static s16 sStateTimer = 60;
+        static s16 sTurnCooldown = 0;
+        static u8  sMoveState = 0;
+
+        if (sTurnCooldown > 0) {
+            sTurnCooldown--;
         }
+
+        // Colision frontal con muro
+        bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
+        
+        // Desnivel del terreno: caida al vacio o subida de pared/colina empinada
+        f32 floorDiff = this->actor.world.pos.y - this->actor.floorHeight;
+        bool dropAhead = floorDiff > 14.0f;
+        bool steepSlope = (this->actor.floorHeight - this->actor.world.pos.y) > 6.0f;
+
+        if ((wallHit || dropAhead || steepSlope) && sTurnCooldown == 0) {
+            // Giro limpio de 120 a 180 grados sin bucle infinito
+            this->actor.world.rot.y += 0x5555 + (s16)(play->state.frames % 0x2AAA);
+            this->actor.shape.rot.y = this->actor.world.rot.y;
+            this->actor.speedXZ = 0.0f;
+            sMoveState = 0;
+            sStateTimer = 30;
+            sTurnCooldown = 25;
+        } else {
+            if (sStateTimer > 0) {
+                sStateTimer--;
+            } else {
+                sMoveState = (sMoveState == 0) ? 1 : 0;
+                sStateTimer = (sMoveState == 1) ? (80 + (play->state.frames % 100)) : (40 + (play->state.frames % 60));
+
+                if (sMoveState == 1 && sTurnCooldown == 0) {
+                    // Desviacion natural de rumbo mientras camina
+                    this->actor.world.rot.y += (s16)((play->state.frames % 0x1400) - 0x0A00);
+                    this->actor.shape.rot.y = this->actor.world.rot.y;
+                }
+            }
+            this->actor.speedXZ = (sMoveState == 1) ? 0.9f : 0.0f;
+        }
+    } else {
+        this->actor.speedXZ = 0.0f;
     }
-}
-
-void EnMa1_Init(Actor* thisx, PlayState* play) {
-    EnMa1* this = (EnMa1*)thisx;
-    bool malonReturnedFromCastle = GameInteractor_Should(VB_MALON_RETURN_FROM_CASTLE,
-                                                         Flags_GetEventChkInf(EVENTCHKINF_TALON_RETURNED_FROM_CASTLE));
-    bool malonTaughtEponasSong =
-        GameInteractor_Should(VB_MALON_ALREADY_TAUGHT_EPONAS_SONG, CHECK_QUEST_ITEM(QUEST_SONG_EPONA));
-    s32 pad;
-
-    ActorShape_Init(&this->actor.shape, 0.0f, ActorShadow_DrawCircle, 18.0f);
-    SkelAnime_InitFlex(play, &this->skelAnime, &gMalonChildSkel, NULL, NULL, NULL, 0);
-    Collider_InitCylinder(play, &this->collider);
-    Collider_SetCylinder(play, &this->collider, &this->actor, &sCylinderInit);
-    CollisionCheck_SetInfo2(&this->actor.colChkInfo, DamageTable_Get(22), &sColChkInfoInit);
-
-    if (!func_80AA08C4(this, play)) {
-        Actor_Kill(&this->actor);
-        return;
-    }
-
+    Actor_MoveXZGravity(&this->actor);
     Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
     Actor_SetScale(&this->actor, 0.01f);
     this->actor.targetMode = 6;
