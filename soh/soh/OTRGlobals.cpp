@@ -2482,10 +2482,12 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         static int sCachedDaysPassed = 0;
         static int sCachedAffinity = 0;
         static int sCachedTalkCount = 0;
+        static s16 sCurrentScene = 0;
+        static bool sIsNewScene = false;
 
-        // Solo procesar I/O una vez al abrir el dialogo
         if (msgCtx->msgMode == 0 || sLastTextId != textId) {
             sLastTextId = textId;
+            sCurrentScene = play->sceneNum;
             try {
                 auto shipCtx = Ship::Context::GetInstance();
                 std::string baseDir = shipCtx ? shipCtx->GetAppDirectoryPath() : ".";
@@ -2503,11 +2505,28 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 sCachedAffinity = mem.value("affinity", 0);
                 sCachedDaysPassed = (int)gSaveContext.totalDays - lastDay;
 
+                if (!mem.contains("visited_scenes") || !mem["visited_scenes"].is_array()) {
+                    mem["visited_scenes"] = nlohmann::json::array();
+                }
+
+                sIsNewScene = true;
+                for (auto& scn : mem["visited_scenes"]) {
+                    if (scn.is_number_integer() && scn.get<int>() == sCurrentScene) {
+                        sIsNewScene = false;
+                        break;
+                    }
+                }
+
+                if (sIsNewScene) {
+                    mem["visited_scenes"].push_back(sCurrentScene);
+                }
+
                 sCachedTalkCount++;
                 sCachedAffinity++;
                 mem["talk_count"] = sCachedTalkCount;
                 mem["last_day"] = (int)gSaveContext.totalDays;
                 mem["affinity"] = sCachedAffinity;
+                mem["last_scene"] = sCurrentScene;
 
                 std::ofstream outFile(memPath);
                 if (outFile.is_open()) {
@@ -2515,16 +2534,25 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                     outFile.close();
                 }
             } catch (...) {
-                // Prevenir crash si falla el almacenamiento
             }
         }
 
         std::string txt;
-        if (sCachedTalkCount > 1 && sCachedDaysPassed >= 2) {
+        if (sIsNewScene && sCachedTalkCount > 1) {
+            txt = "Whoa, Fairy Boy!&I did not expect to run into you all the way out here!&Are you on an adventure?";
+        } else if (sCachedTalkCount > 1 && sCachedDaysPassed >= 2) {
             txt = "Fairy Boy! Where were you?&You disappeared for %r[[daysPassed]]%w days!&Did you forget about the ranch?";
+        } else if (sCurrentScene == SCENE_SPOT20) {
+            txt = IS_DAY
+                ? "Welcome to Lon Lon Ranch!&The horses are resting, but Epona seems excited to see you today!"
+                : "The ranch is so quiet under the night sky...&Listen to the crickets, Fairy Boy.";
+        } else if (sCurrentScene == SCENE_SPOT00) {
+            txt = IS_DAY
+                ? "Hyrule Field is huge, isn't it?&Watch your step out here, Fairy Boy!&Day %r[[totalDays]]%w already!"
+                : "It gets dangerous out in the field at night!&Keep your sword ready, Fairy Boy!";
         } else if (sCachedAffinity >= 5) {
             txt = IS_DAY
-                ? "Back again, Fairy Boy?&The horses always perk up when you visit!&Day %r[[totalDays]]%w is looking bright."
+                ? "Back again, Fairy Boy?&It always brightens my day when you visit!&Day %r[[totalDays]]%w is looking bright."
                 : "Still up wandering around?&Be careful out there, Fairy Boy!&Day %r[[totalDays]]%w is almost done.";
         } else {
             txt = IS_DAY

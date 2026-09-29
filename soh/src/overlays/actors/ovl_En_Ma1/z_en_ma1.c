@@ -425,7 +425,36 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
     EnMa1* this = (EnMa1*)thisx;
     s32 pad;
 
-    if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE) { this->actor.speedXZ = 1.0f; } else { this->actor.speedXZ = 0.0f; }
+    if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE) {
+        static s16 sStateTimer = 60;
+        static u8  sMoveState = 0;
+
+        bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
+        bool dropAhead = (this->actor.world.pos.y - this->actor.floorHeight) > 15.0f;
+
+        if (wallHit || dropAhead) {
+            this->actor.world.rot.y += 0x4000 + (s16)(play->state.frames % 0x4000);
+            this->actor.shape.rot.y = this->actor.world.rot.y;
+            this->actor.speedXZ = 0.0f;
+            sMoveState = 0;
+            sStateTimer = 40;
+        } else {
+            if (sStateTimer > 0) {
+                sStateTimer--;
+            } else {
+                sMoveState = (sMoveState == 0) ? 1 : 0;
+                sStateTimer = (sMoveState == 1) ? (60 + (play->state.frames % 120)) : (40 + (play->state.frames % 60));
+
+                if (sMoveState == 1) {
+                    this->actor.world.rot.y += (s16)((play->state.frames % 0x2000) - 0x1000);
+                    this->actor.shape.rot.y = this->actor.world.rot.y;
+                }
+            }
+            this->actor.speedXZ = (sMoveState == 1) ? 1.0f : 0.0f;
+        }
+    } else {
+        this->actor.speedXZ = 0.0f;
+    }
     Actor_MoveXZGravity(&this->actor);
     Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
     Collider_UpdateCylinder(&this->actor, &this->collider);
