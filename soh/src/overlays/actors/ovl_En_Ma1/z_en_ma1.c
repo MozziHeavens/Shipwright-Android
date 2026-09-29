@@ -32,6 +32,8 @@ u16 EnMa1_GetText(PlayState* play, Actor* this);
 s16 func_80AA0778(PlayState* play, Actor* this);
 
 void func_80AA0D88(EnMa1* this, PlayState* play);
+s32 func_80AA0BC4(EnMa1* this, PlayState* play);
+void func_80AA0EA0(EnMa1* this, PlayState* play);
 void func_80AA0EA0(EnMa1* this, PlayState* play);
 void func_80AA0EFC(EnMa1* this, PlayState* play);
 void func_80AA0F44(EnMa1* this, PlayState* play);
@@ -612,7 +614,7 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
             &this->interactInfo.talkState,
             (f32)this->collider.dim.radius + 35.0f,
             func_80AA0BC4,
-            func_80AA0EE0
+            func_80AA0EA0
         );
     }
     this->actionFunc(this, play);
