@@ -22,7 +22,7 @@ typedef struct EnMa1 {
 
 void func_80AA106C(EnMa1* enMa1, PlayState* play);
 void func_80AA0D88(EnMa1* enMa1, PlayState* play);
-s32 func_80AA0BC4(EnMa1* this, PlayState* play);
-void func_80AA0EE0(EnMa1* this, PlayState* play);
+s32 func_80AA0BC4(EnMa1* enMa1, PlayState* play);
+void func_80AA0EE0(EnMa1* enMa1, PlayState* play);
 
 #endif
