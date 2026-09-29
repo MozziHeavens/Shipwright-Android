@@ -181,11 +181,11 @@ static void EnMa1_InjectDynamicMessage(PlayState* play) {
     if (sLearnedBuffer[0] != 0 && (sTalkCounter % 2 == 0)) {
         text = sLearnedBuffer;
     } else if (sTalkCounter == 1) {
-        text = "Hello again, fairy boy!\x01Epona and I were just talking about you.\x02";
+        text = "Hello again, fairy boy!\x01" "Epona and I were just talking about you.\x02";
     } else if (time >= 0x4555 && time < 0x8000) {
-        text = "Mornings at the ranch are wonderful!\x01Did you come by to practice your song?\x02";
+        text = "Mornings at the ranch are wonderful!\x01" "Did you come by to practice your song?\x02";
     } else if (time >= 0x8000 && time < 0xC000) {
-        text = "The sun is so warm today...\x01Dad is probably napping near the stables.\x02";
+        text = "The sun is so warm today...\x01" "Dad is probably napping near the stables.\x02";
     } else if (time >= 0xC000 && time < 0xE000) {
         text = "Look at the sky over the fences...\x01The moon will be rising over Hyrule soon.\x02";
     } else {
