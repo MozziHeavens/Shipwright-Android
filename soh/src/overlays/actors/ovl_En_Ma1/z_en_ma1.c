@@ -340,6 +340,9 @@ s32 func_80AA08C4(EnMa1* this, PlayState* play) {
         return 1;
     }
     if (play->sceneNum == SCENE_LON_LON_RANCH) {
+        // Asegurar que exista tanto de dia como de noche
+        return 1;
+    }
         return 1;
     }
     if (play->sceneNum != SCENE_LON_LON_RANCH) {
@@ -419,7 +422,7 @@ void EnMa1_Init(Actor* thisx, PlayState* play) {
         return;
     }
 
-    Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
+    Actor_UpdateBgCheckInfo(play, &this->actor, 25.0f, 18.0f, 0.0f, UPDBGCHECKINFO_FLAG_0 | UPDBGCHECKINFO_FLAG_2 | UPDBGCHECKINFO_FLAG_3 | UPDBGCHECKINFO_FLAG_4);
     Actor_SetScale(&this->actor, 0.01f);
     this->actor.targetMode = 6;
     this->interactInfo.talkState = NPC_TALK_STATE_IDLE;
@@ -560,13 +563,21 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
         bool dropAhead = (this->actor.world.pos.y - this->actor.floorHeight) > 15.0f;
 
         bool actorHit = (this->collider.base.ocFlags1 & OC1_HIT) != 0;
-    if (wallHit || dropAhead || actorHit) {
-            this->actor.world.rot.y += 0x4000 + (s16)(play->state.frames % 0x4000);
-            this->actor.shape.rot.y = this->actor.world.rot.y;
-            this->actor.speedXZ = 0.0f;
-            sMoveState = 0;
-            sStateTimer = 40;
-        } else {
+    bool actorHit = (this->collider.base.ocFlags1 & OC1_HIT) != 0;
+    if (wallHit) {
+        // Logica calcada de Link: rebotar exactamente perpendicular al plano del muro/cerca
+        this->actor.world.rot.y = this->actor.wallYaw + 0x8000;
+        this->actor.shape.rot.y = this->actor.world.rot.y;
+        this->actor.speedXZ = 0.0f;
+        sMoveState = 0;
+        sStateTimer = 30;
+    } else if (dropAhead || actorHit) {
+        this->actor.world.rot.y += 0x8000;
+        this->actor.shape.rot.y = this->actor.world.rot.y;
+        this->actor.speedXZ = 0.0f;
+        sMoveState = 0;
+        sStateTimer = 30;
+    } else {
             if (sStateTimer > 0) {
                 sStateTimer--;
             } else {
@@ -592,7 +603,7 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
         this->actor.speedXZ = 0.0f;
     }
     Actor_MoveXZGravity(&this->actor);
-    Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
+    Actor_UpdateBgCheckInfo(play, &this->actor, 25.0f, 18.0f, 0.0f, UPDBGCHECKINFO_FLAG_0 | UPDBGCHECKINFO_FLAG_2 | UPDBGCHECKINFO_FLAG_3 | UPDBGCHECKINFO_FLAG_4);
     Collider_UpdateCylinder(&this->actor, &this->collider);
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);
     SkelAnime_Update(&this->skelAnime);
@@ -635,7 +646,7 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
             this->actor.speedXZ = (sMove == 1) ? 0.9f : 0.0f;
         }
         Actor_MoveXZGravity(&this->actor);
-        Actor_UpdateBgCheckInfo(play, &this->actor, 0.0f, 0.0f, 0.0f, 4);
+        Actor_UpdateBgCheckInfo(play, &this->actor, 25.0f, 18.0f, 0.0f, UPDBGCHECKINFO_FLAG_0 | UPDBGCHECKINFO_FLAG_2 | UPDBGCHECKINFO_FLAG_3 | UPDBGCHECKINFO_FLAG_4);
     } else {
         this->actor.speedXZ = 0.0f;
     }
