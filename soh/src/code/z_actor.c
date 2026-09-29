@@ -3065,7 +3065,11 @@ void func_800315AC(PlayState* play, ActorContext* actorCtx) {
                         actor->flags &= ~ACTOR_FLAG_INSIDE_CULLING_VOLUME;
                     }
                 } else {
-                    actor->flags |= ACTOR_FLAG_INSIDE_CULLING_VOLUME;
+                    if (func_800314B0(play, actor)) {
+                        actor->flags |= ACTOR_FLAG_INSIDE_CULLING_VOLUME;
+                    } else {
+                        actor->flags &= ~ACTOR_FLAG_INSIDE_CULLING_VOLUME;
+                    }
                 }
             }
 
@@ -3359,7 +3363,7 @@ Actor* Actor_Spawn(ActorContext* actorCtx, PlayState* play, s16 actorId, f32 pos
 
     memset((u8*)actor, 0, dbEntry->instanceSize);
     actor->id = dbEntry->id;
-    actor->flags = dbEntry->flags;
+    actor->flags = dbEntry->flags | ACTOR_FLAG_DRAW_CULLING_DISABLED;
 
     if (dbEntry->id == ACTOR_EN_PART) {
         actor->objBankIndex = rotZ;
