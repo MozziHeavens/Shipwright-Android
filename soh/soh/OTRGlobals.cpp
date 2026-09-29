@@ -2478,23 +2478,51 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
     }
     if (textId == 0x2041) {
-        std::string memPath = Ship::Context::GetAppDirectoryPath("") + "/malon_memory.json";
-        nlohmann::json mem;
-        std::ifstream inFile(memPath);
-        if (inFile.is_open()) {
-            try { inFile >> mem; } catch (...) { mem = nlohmann::json::object(); }
-            inFile.close();
+        static uint16_t sLastTextId = 0;
+        static int sCachedDaysPassed = 0;
+        static int sCachedAffinity = 0;
+        static int sCachedTalkCount = 0;
+
+        // Solo procesar I/O una vez al abrir el dialogo
+        if (msgCtx->msgMode == 0 || sLastTextId != textId) {
+            sLastTextId = textId;
+            try {
+                auto shipCtx = Ship::Context::GetInstance();
+                std::string baseDir = shipCtx ? shipCtx->GetAppDirectoryPath() : ".";
+                std::string memPath = baseDir + "/malon_memory.json";
+
+                nlohmann::json mem;
+                std::ifstream inFile(memPath);
+                if (inFile.is_open()) {
+                    try { inFile >> mem; } catch (...) { mem = nlohmann::json::object(); }
+                    inFile.close();
+                }
+
+                sCachedTalkCount = mem.value("talk_count", 0);
+                int lastDay = mem.value("last_day", (int)gSaveContext.totalDays);
+                sCachedAffinity = mem.value("affinity", 0);
+                sCachedDaysPassed = (int)gSaveContext.totalDays - lastDay;
+
+                sCachedTalkCount++;
+                sCachedAffinity++;
+                mem["talk_count"] = sCachedTalkCount;
+                mem["last_day"] = (int)gSaveContext.totalDays;
+                mem["affinity"] = sCachedAffinity;
+
+                std::ofstream outFile(memPath);
+                if (outFile.is_open()) {
+                    outFile << mem.dump(2);
+                    outFile.close();
+                }
+            } catch (...) {
+                // Prevenir crash si falla el almacenamiento
+            }
         }
 
-        int talkCount = mem.value("talk_count", 0);
-        int lastDay = mem.value("last_day", (int)gSaveContext.totalDays);
-        int affinity = mem.value("affinity", 0);
-        int daysPassed = (int)gSaveContext.totalDays - lastDay;
-
         std::string txt;
-        if (talkCount > 0 && daysPassed >= 2) {
+        if (sCachedTalkCount > 1 && sCachedDaysPassed >= 2) {
             txt = "Fairy Boy! Where were you?&You disappeared for %r[[daysPassed]]%w days!&Did you forget about the ranch?";
-        } else if (affinity >= 5) {
+        } else if (sCachedAffinity >= 5) {
             txt = IS_DAY
                 ? "Back again, Fairy Boy?&The horses always perk up when you visit!&Day %r[[totalDays]]%w is looking bright."
                 : "Still up wandering around?&Be careful out there, Fairy Boy!&Day %r[[totalDays]]%w is almost done.";
@@ -2504,21 +2532,9 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
         }
 
-        talkCount++;
-        affinity++;
-        mem["talk_count"] = talkCount;
-        mem["last_day"] = (int)gSaveContext.totalDays;
-        mem["affinity"] = affinity;
-
-        std::ofstream outFile(memPath);
-        if (outFile.is_open()) {
-            outFile << mem.dump(2);
-            outFile.close();
-        }
-
         messageEntry = CustomMessage(txt, txt, txt);
         messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
-        messageEntry.Replace("[[daysPassed]]", std::to_string(daysPassed));
+        messageEntry.Replace("[[daysPassed]]", std::to_string(sCachedDaysPassed));
         messageEntry.AutoFormat();
     }
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
