@@ -2597,6 +2597,8 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
         messageEntry.Replace("[[daysPassed]]", std::to_string(sCachedDaysPassed));
         messageEntry.AutoFormat();
+        // Forzar terminador para que aparezca el botón de continuar
+        messageEntry += CustomMessage::MESSAGE_END();
     }
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
     switch (gSaveContext.language) {
