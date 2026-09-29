@@ -1,3 +1,4 @@
+#include <nlohmann/json.hpp>
 #include "OTRGlobals.h"
 #include "OTRAudio.h"
 #include <iostream>
@@ -2477,11 +2478,47 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
     }
     if (textId == 0x2041) {
-        std::string txt = IS_DAY
-            ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
-            : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+        std::string memPath = Ship::Context::GetAppDirectoryPath("") + "/malon_memory.json";
+        nlohmann::json mem;
+        std::ifstream inFile(memPath);
+        if (inFile.is_open()) {
+            try { inFile >> mem; } catch (...) { mem = nlohmann::json::object(); }
+            inFile.close();
+        }
+
+        int talkCount = mem.value("talk_count", 0);
+        int lastDay = mem.value("last_day", (int)gSaveContext.totalDays);
+        int affinity = mem.value("affinity", 0);
+        int daysPassed = (int)gSaveContext.totalDays - lastDay;
+
+        std::string txt;
+        if (talkCount > 0 && daysPassed >= 2) {
+            txt = "Fairy Boy! Where were you?&You disappeared for %r[[daysPassed]]%w days!&Did you forget about the ranch?";
+        } else if (affinity >= 5) {
+            txt = IS_DAY
+                ? "Back again, Fairy Boy?&The horses always perk up when you visit!&Day %r[[totalDays]]%w is looking bright."
+                : "Still up wandering around?&Be careful out there, Fairy Boy!&Day %r[[totalDays]]%w is almost done.";
+        } else {
+            txt = IS_DAY
+                ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
+                : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+        }
+
+        talkCount++;
+        affinity++;
+        mem["talk_count"] = talkCount;
+        mem["last_day"] = (int)gSaveContext.totalDays;
+        mem["affinity"] = affinity;
+
+        std::ofstream outFile(memPath);
+        if (outFile.is_open()) {
+            outFile << mem.dump(2);
+            outFile.close();
+        }
+
         messageEntry = CustomMessage(txt, txt, txt);
         messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
+        messageEntry.Replace("[[daysPassed]]", std::to_string(daysPassed));
         messageEntry.AutoFormat();
     }
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
