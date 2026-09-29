@@ -2490,7 +2490,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             sCurrentScene = play->sceneNum;
             try {
                 auto shipCtx = Ship::Context::GetInstance();
-                std::string baseDir = shipCtx ? shipCtx->GetAppDirectoryPath() : ".";
+                std::string baseDir = shipCtx ? shipCtx->GetAppDirectoryPath("") : ".";
                 std::string memPath = baseDir + "/malon_memory.json";
 
                 nlohmann::json mem;
@@ -2542,11 +2542,11 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             txt = "Whoa, Fairy Boy!&I did not expect to run into you all the way out here!&Are you on an adventure?";
         } else if (sCachedTalkCount > 1 && sCachedDaysPassed >= 2) {
             txt = "Fairy Boy! Where were you?&You disappeared for %r[[daysPassed]]%w days!&Did you forget about the ranch?";
-        } else if (sCurrentScene == SCENE_SPOT20) {
+        } else if (sCurrentScene == SCENE_LON_LON_RANCH) {
             txt = IS_DAY
                 ? "Welcome to Lon Lon Ranch!&The horses are resting, but Epona seems excited to see you today!"
                 : "The ranch is so quiet under the night sky...&Listen to the crickets, Fairy Boy.";
-        } else if (sCurrentScene == SCENE_SPOT00) {
+        } else if (sCurrentScene == SCENE_HYRULE_FIELD) {
             txt = IS_DAY
                 ? "Hyrule Field is huge, isn't it?&Watch your step out here, Fairy Boy!&Day %r[[totalDays]]%w already!"
                 : "It gets dangerous out in the field at night!&Keep your sword ready, Fairy Boy!";
