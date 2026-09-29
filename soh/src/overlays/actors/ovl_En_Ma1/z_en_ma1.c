@@ -103,40 +103,37 @@ static void* sEyeTextures[] = {
 };
 
 static void* EnMa1_InternetResearchTask(void* arg) {
-    // Dormir 3 segundos para dejar que el juego termine de cargar la escena tranquilamente
-    sleep(3);
+    sleep(4);
 
+    const char* targetDir = "/sdcard/Download/Hyrule/Characters/Malon";
     const char* filePath = "/sdcard/Download/Hyrule/Characters/Malon/memory.txt";
-    
-    // Probar resolucion DNS basica hacia un endpoint ligero de prueba/conocimiento
-    // Intento de conexion HTTP ligera para traer lore de Malon
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock >= 0) {
-        struct hostent* server = gethostbyname("raw.githubusercontent.com");
-        if (server != NULL) {
-            struct sockaddr_in serv_addr;
-            memset(&serv_addr, 0, sizeof(serv_addr));
-            serv_addr.sin_family = AF_INET;
-            memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
-            serv_addr.sin_port = htons(80);
+    const char* tempPath = "/sdcard/Download/Hyrule/Characters/Malon/lore_temp.txt";
 
-            // Timeout de 2 segundos para no demorar si hay mala senal
-            struct timeval tv;
-            tv.tv_sec = 2;
-            tv.tv_usec = 0;
-            setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
-            setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+    // URL con fragmentos de lore, mangas y curiosidades de Malon
+    const char* loreUrl = "https://raw.githubusercontent.com/MozziHeavens/Shipwright-Android/main/malon_lore.txt";
 
-            if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0) {
-                FILE* fp = fopen(filePath, "a");
-                if (fp != NULL) {
-                    fputs("The tales say the hero travels through time itself...\n", fp);
-                    fputs("Lon Lon milk has a secret touch passed down for ages!\n", fp);
-                    fclose(fp);
+    // Descarga HTTPS directa usando el binario nativo de Android con timeout de 5 segundos
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "/system/bin/curl -k -s -m 5 \"%s\" -o \"%s\"", loreUrl, tempPath);
+    int res = system(cmd);
+
+    if (res == 0) {
+        FILE* ft = fopen(tempPath, "r");
+        if (ft != NULL) {
+            FILE* fm = fopen(filePath, "a");
+            if (fm != NULL) {
+                char buffer[256];
+                while (fgets(buffer, sizeof(buffer), ft) != NULL) {
+                    // Evitar lineas vacias
+                    if (strlen(buffer) > 3) {
+                        fputs(buffer, fm);
+                    }
                 }
+                fclose(fm);
             }
+            fclose(ft);
+            remove(tempPath);
         }
-        close(sock);
     }
 
     return NULL;
@@ -339,6 +336,9 @@ s32 func_80AA08C4(EnMa1* this, PlayState* play) {
         }
     }
     if ((play->sceneNum == SCENE_LON_LON_BUILDINGS) && IS_NIGHT && malonReturnedFromCastle) {
+        return 1;
+    }
+    if (play->sceneNum == SCENE_LON_LON_RANCH) {
         return 1;
     }
     if (play->sceneNum != SCENE_LON_LON_RANCH) {
@@ -558,7 +558,8 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
         bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
         bool dropAhead = (this->actor.world.pos.y - this->actor.floorHeight) > 15.0f;
 
-        if (wallHit || dropAhead) {
+        bool actorHit = (this->collider.base.ocFlags1 & OC1_HIT) != 0;
+    if (wallHit || dropAhead || actorHit) {
             this->actor.world.rot.y += 0x4000 + (s16)(play->state.frames % 0x4000);
             this->actor.shape.rot.y = this->actor.world.rot.y;
             this->actor.speedXZ = 0.0f;
