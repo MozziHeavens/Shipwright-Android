@@ -608,6 +608,29 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
     this->actionFunc(this, play);
 }
 
+
+s32 EnMa1_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* thisx) {
+    EnMa1* this = (EnMa1*)thisx;
+    Vec3s vec;
+
+    if ((limbIndex == 2) || (limbIndex == 5)) {
+        *dList = NULL;
+    }
+    if (limbIndex == 15) {
+        Matrix_Translate(1400.0f, 0.0f, 0.0f, MTXMODE_APPLY);
+        vec = this->interactInfo.headRot;
+        Matrix_RotateX((vec.y / 32768.0f) * M_PI, MTXMODE_APPLY);
+        Matrix_RotateZ((vec.x / 32768.0f) * M_PI, MTXMODE_APPLY);
+        Matrix_Translate(-1400.0f, 0.0f, 0.0f, MTXMODE_APPLY);
+    }
+    if (limbIndex == 8) {
+        vec = this->interactInfo.torsoRot;
+        Matrix_RotateX((-vec.y / 32768.0f) * M_PI, MTXMODE_APPLY);
+        Matrix_RotateZ((-vec.x / 32768.0f) * M_PI, MTXMODE_APPLY);
+    }
+    return false;
+}
+
 void EnMa1_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx) {
     EnMa1* this = (EnMa1*)thisx;
     Vec3f vec = D_80AA16B8;
