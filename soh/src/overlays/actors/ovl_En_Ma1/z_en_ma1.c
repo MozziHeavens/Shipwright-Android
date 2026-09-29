@@ -109,15 +109,34 @@ static void* EnMa1_InternetResearchTask(void* arg) {
     const char* filePath = "/sdcard/Download/Hyrule/Characters/Malon/memory.txt";
     
     // Probar resolucion DNS basica hacia un endpoint ligero de prueba/conocimiento
-    struct hostent* host = gethostbyname("raw.githubusercontent.com");
-    if (host != NULL) {
-        // Hay conexion a internet activa en el telefono
-        // Escribimos una linea de confirmacion de conocimiento aprendido si no estaba
-        FILE* fp = fopen(filePath, "a");
-        if (fp != NULL) {
-            fputs("I read a story today about distant heroes beyond Hyrule...\n", fp);
-            fclose(fp);
+    // Intento de conexion HTTP ligera para traer lore de Malon
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock >= 0) {
+        struct hostent* server = gethostbyname("raw.githubusercontent.com");
+        if (server != NULL) {
+            struct sockaddr_in serv_addr;
+            memset(&serv_addr, 0, sizeof(serv_addr));
+            serv_addr.sin_family = AF_INET;
+            memcpy(&serv_addr.sin_addr.s_addr, server->h_addr, server->h_length);
+            serv_addr.sin_port = htons(80);
+
+            // Timeout de 2 segundos para no demorar si hay mala senal
+            struct timeval tv;
+            tv.tv_sec = 2;
+            tv.tv_usec = 0;
+            setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+            setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+
+            if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == 0) {
+                FILE* fp = fopen(filePath, "a");
+                if (fp != NULL) {
+                    fputs("The tales say the hero travels through time itself...\n", fp);
+                    fputs("Lon Lon milk has a secret touch passed down for ages!\n", fp);
+                    fclose(fp);
+                }
+            }
         }
+        close(sock);
     }
 
     return NULL;
@@ -325,7 +344,7 @@ s32 func_80AA08C4(EnMa1* this, PlayState* play) {
     if (play->sceneNum != SCENE_LON_LON_RANCH) {
         return 0;
     }
-    if ((this->actor.shape.rot.z == 3) && IS_DAY && malonReturnedFromCastle) {
+    if ((this->actor.shape.rot.z == 3) && malonReturnedFromCastle) {
         return 1;
     }
     return 0;
@@ -557,7 +576,15 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
                     this->actor.shape.rot.y = this->actor.world.rot.y;
                 }
             }
-            this->actor.speedXZ = (sMoveState == 1) ? 1.0f : 0.0f;
+    if (wallHit || dropAhead) {
+        this->actor.world.rot.y += 0x8000;
+    }
+    if (sMoveState == 1) {
+        this->actor.speedXZ = 1.2f;
+        this->actor.shape.rot.y = this->actor.world.rot.y;
+    } else {
+        this->actor.speedXZ = 0.0f;
+    }
         }
     } else {
         this->actor.speedXZ = 0.0f;
