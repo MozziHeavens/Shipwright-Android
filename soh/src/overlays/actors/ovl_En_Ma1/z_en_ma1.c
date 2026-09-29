@@ -550,30 +550,42 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
     EnMa1* this = (EnMa1*)thisx;
     s32 pad;
 
-    if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE) {
-        static s16 sStateTimer = 60;
-        static u8  sMoveState = 0;
+    // === Movimiento y colisión limpios (estilo Link) ===
+    static s16 sStateTimer = 0;
+    static u8 sMoveState = 0;
 
-        bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
+    bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
     bool dropAhead = (this->actor.world.pos.y - this->actor.floorHeight) > 15.0f;
     bool actorHit = (this->collider.base.ocFlags1 & OC1_HIT) != 0;
 
-    if (wallHit) {
-        // Exactamente como Link: usar la normal de la pared
-        this->actor.world.rot.y = this->actor.wallYaw + 0x8000;
-        this->actor.shape.rot.y = this->actor.world.rot.y;
-        this->actor.speedXZ = 0.0f;
-        sMoveState = 0;
-        sStateTimer = 30;
-    } else if (dropAhead || actorHit) {
-        this->actor.world.rot.y += 0x8000;
-        this->actor.shape.rot.y = this->actor.world.rot.y;
-        this->actor.speedXZ = 0.0f;
-        sMoveState = 0;
-        sStateTimer = 30;
-    }
-
     if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE) {
+        if (wallHit) {
+            // Rebote exacto como Link usando la normal de la pared
+            this->actor.world.rot.y = this->actor.wallYaw + 0x8000;
+            this->actor.shape.rot.y = this->actor.world.rot.y;
+            this->actor.speedXZ = 0.0f;
+            sMoveState = 0;
+            sStateTimer = 30;
+        } else if (dropAhead || actorHit) {
+            this->actor.world.rot.y += 0x8000;
+            this->actor.shape.rot.y = this->actor.world.rot.y;
+            this->actor.speedXZ = 0.0f;
+            sMoveState = 0;
+            sStateTimer = 30;
+        }
+
+        if (sStateTimer > 0) {
+            sStateTimer--;
+        } else {
+            if (sMoveState == 0) {
+                sMoveState = 1;
+                sStateTimer = 70 + (play->state.frames % 50);
+            } else {
+                sMoveState = 0;
+                sStateTimer = 40 + (play->state.frames % 30);
+            }
+        }
+
         if (sMoveState == 1) {
             this->actor.speedXZ = 1.2f;
             this->actor.shape.rot.y = this->actor.world.rot.y;
@@ -584,113 +596,16 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
         this->actor.speedXZ = 0.0f;
     }
 
-    } else if (dropAhead || actorHit) {
-        this->actor.world.rot.y += 0x8000;
-        this->actor.shape.rot.y = this->actor.world.rot.y;
-        this->actor.speedXZ = 0.0f;
-        sMoveState = 0;
-        sStateTimer = 30;
-    } else {
-            if (sStateTimer > 0) {
-                sStateTimer--;
-            } else {
-                sMoveState = (sMoveState == 0) ? 1 : 0;
-                sStateTimer = (sMoveState == 1) ? (60 + (play->state.frames % 120)) : (40 + (play->state.frames % 60));
-
-                if (sMoveState == 1) {
-                    this->actor.world.rot.y += (s16)((play->state.frames % 0x2000) - 0x1000);
-                    this->actor.shape.rot.y = this->actor.world.rot.y;
-                }
-            }
-    if (wallHit || dropAhead) {
-        this->actor.world.rot.y += 0x8000;
-    }
-    if (sMoveState == 1) {
-        this->actor.speedXZ = 1.2f;
-        this->actor.shape.rot.y = this->actor.world.rot.y;
-    } else {
-        this->actor.speedXZ = 0.0f;
-    }
-        }
-    } else {
-        this->actor.speedXZ = 0.0f;
-    }
     Actor_MoveXZGravity(&this->actor);
     Actor_UpdateBgCheckInfo(play, &this->actor, 26.0f, 18.0f, 0.0f, 4);
+
     Collider_UpdateCylinder(&this->actor, &this->collider);
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);
+
     SkelAnime_Update(&this->skelAnime);
     EnMa1_UpdateEyes(this);
+
     this->actionFunc(this, play);
-
-    if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE && this->skelAnime.animation == &gMalonChildSingAnim) {
-        static s16 sTimer = 60;
-        static s16 sCooldown = 0;
-        static u8  sMove = 0;
-
-        if (sCooldown > 0) {
-            sCooldown--;
-        }
-
-        bool wall = (this->actor.bgCheckFlags & 8) != 0;
-        f32 fDiff = this->actor.world.pos.y - this->actor.floorHeight;
-        bool drop = fDiff > 14.0f;
-        bool steep = (this->actor.floorHeight - this->actor.world.pos.y) > 6.0f;
-
-        if ((wall || drop || steep) && sCooldown == 0) {
-            this->actor.world.rot.y += 0x5555 + (s16)(play->state.frames % 0x2AAA);
-            this->actor.shape.rot.y = this->actor.world.rot.y;
-            this->actor.speedXZ = 0.0f;
-            sMove = 0;
-            sTimer = 30;
-            sCooldown = 25;
-        } else {
-            if (sTimer > 0) {
-                sTimer--;
-            } else {
-                sMove = (sMove == 0) ? 1 : 0;
-                sTimer = (sMove == 1) ? (80 + (play->state.frames % 100)) : (40 + (play->state.frames % 60));
-
-                if (sMove == 1 && sCooldown == 0) {
-                    this->actor.world.rot.y += (s16)((play->state.frames % 0x1400) - 0x0A00);
-                    this->actor.shape.rot.y = this->actor.world.rot.y;
-                }
-            }
-            this->actor.speedXZ = (sMove == 1) ? 0.9f : 0.0f;
-        }
-        Actor_MoveXZGravity(&this->actor);
-        Actor_UpdateBgCheckInfo(play, &this->actor, 26.0f, 18.0f, 0.0f, 4);
-    } else {
-        this->actor.speedXZ = 0.0f;
-    }
-    if (this->actionFunc != EnMa1_DoNothing) {
-        Npc_UpdateTalking(play, &this->actor, &this->interactInfo.talkState, (f32)this->collider.dim.radius + 30.0f,
-                          EnMa1_GetText, func_80AA0778);
-    }
-    func_80AA0B74(this);
-    func_80AA0AF4(this, play);
-}
-
-s32 EnMa1_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* thisx) {
-    EnMa1* this = (EnMa1*)thisx;
-    Vec3s vec;
-
-    if ((limbIndex == 2) || (limbIndex == 5)) {
-        *dList = NULL;
-    }
-    if (limbIndex == 15) {
-        Matrix_Translate(1400.0f, 0.0f, 0.0f, MTXMODE_APPLY);
-        vec = this->interactInfo.headRot;
-        Matrix_RotateX((vec.y / 32768.0f) * M_PI, MTXMODE_APPLY);
-        Matrix_RotateZ((vec.x / 32768.0f) * M_PI, MTXMODE_APPLY);
-        Matrix_Translate(-1400.0f, 0.0f, 0.0f, MTXMODE_APPLY);
-    }
-    if (limbIndex == 8) {
-        vec = this->interactInfo.torsoRot;
-        Matrix_RotateX((-vec.y / 32768.0f) * M_PI, MTXMODE_APPLY);
-        Matrix_RotateZ((-vec.x / 32768.0f) * M_PI, MTXMODE_APPLY);
-    }
-    return false;
 }
 
 void EnMa1_PostLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx) {
