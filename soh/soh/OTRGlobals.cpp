@@ -2538,26 +2538,59 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         }
 
         std::string txt;
-        if (sIsNewScene && sCachedTalkCount > 1) {
-            txt = "Whoa, Fairy Boy!&I did not expect to run into you all the way out here!&Are you on an adventure?";
-        } else if (sCachedTalkCount > 1 && sCachedDaysPassed >= 2) {
-            txt = "Fairy Boy! Where were you?&You disappeared for %r[[daysPassed]]%w days!&Did you forget about the ranch?";
-        } else if (sCurrentScene == SCENE_LON_LON_RANCH) {
-            txt = IS_DAY
-                ? "Welcome to Lon Lon Ranch!&The horses are resting, but Epona seems excited to see you today!"
-                : "The ranch is so quiet under the night sky...&Listen to the crickets, Fairy Boy.";
-        } else if (sCurrentScene == SCENE_HYRULE_FIELD) {
-            txt = IS_DAY
-                ? "Hyrule Field is huge, isn't it?&Watch your step out here, Fairy Boy!&Day %r[[totalDays]]%w already!"
-                : "It gets dangerous out in the field at night!&Keep your sword ready, Fairy Boy!";
-        } else if (sCachedAffinity >= 5) {
-            txt = IS_DAY
-                ? "Back again, Fairy Boy?&It always brightens my day when you visit!&Day %r[[totalDays]]%w is looking bright."
-                : "Still up wandering around?&Be careful out there, Fairy Boy!&Day %r[[totalDays]]%w is almost done.";
-        } else {
-            txt = IS_DAY
-                ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
-                : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+        bool usedLore = false;
+        std::vector<std::string> loreLines;
+
+        // Leer memory.txt si existe
+        {
+            std::ifstream loreFile("/sdcard/Download/Hyrule/Characters/Malon/memory.txt");
+            if (loreFile.is_open()) {
+                std::string line;
+                while (std::getline(loreFile, line)) {
+                    while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) {
+                        line.pop_back();
+                    }
+                    if (line.size() > 8) {
+                        loreLines.push_back(line);
+                    }
+                }
+                loreFile.close();
+            }
+        }
+
+        // Si hay lore, usar una línea aleatoria
+        if (!loreLines.empty() && sCachedTalkCount > 0) {
+            size_t idx = (size_t)(gSaveContext.totalDays + sCachedTalkCount + play->state.frames) % loreLines.size();
+            txt = loreLines[idx];
+            for (char& ch : txt) {
+                if (ch == '|' || ch == '\n') ch = '&';
+            }
+            usedLore = true;
+        }
+
+        // Fallback a la lógica normal si no hay lore
+        if (!usedLore) {
+            if (sIsNewScene && sCachedTalkCount > 1) {
+                txt = "Whoa, Fairy Boy!&I did not expect to run into you all the way out here!&Are you on an adventure?";
+            } else if (sCachedTalkCount > 1 && sCachedDaysPassed >= 2) {
+                txt = "Fairy Boy! Where were you?&You disappeared for %r[[daysPassed]]%w days!&Did you forget about the ranch?";
+            } else if (sCurrentScene == SCENE_LON_LON_RANCH) {
+                txt = IS_DAY
+                    ? "Welcome to Lon Lon Ranch!&The horses are resting, but Epona seems excited to see you today!"
+                    : "The ranch is so quiet under the night sky...&Listen to the crickets, Fairy Boy.";
+            } else if (sCurrentScene == SCENE_HYRULE_FIELD) {
+                txt = IS_DAY
+                    ? "Hyrule Field is huge, isn't it?&Watch your step out here, Fairy Boy!&Day %r[[totalDays]]%w already!"
+                    : "It gets dangerous out in the field at night!&Keep your sword ready, Fairy Boy!";
+            } else if (sCachedAffinity >= 5) {
+                txt = IS_DAY
+                    ? "Back again, Fairy Boy?&It always brightens my day when you visit!&Day %r[[totalDays]]%w is looking bright."
+                    : "Still up wandering around?&Be careful out there, Fairy Boy!&Day %r[[totalDays]]%w is almost done.";
+            } else {
+                txt = IS_DAY
+                    ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
+                    : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+            }
         }
 
         messageEntry = CustomMessage(txt, txt, txt);
