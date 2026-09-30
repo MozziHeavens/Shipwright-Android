@@ -2531,6 +2531,10 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry = CustomMessage(txt, txt, txt);
         messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
         messageEntry.AutoFormat();
+        // 1. Restaurar libertad total de inventario y C-buttons
+        play->msgCtx.ocarinaMode = 0;
+        play->interfaceCtx.bButtonDoAction = 0;
+        gSaveContext.eventInf[0] &= ~0x20;
     }
 
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
