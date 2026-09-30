@@ -425,17 +425,85 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
     EnMa1* this = (EnMa1*)thisx;
     s32 pad;
 
+    // --- FÍSICA Y NAVEGACIÓN ESTILO LINK ---
+    if (this->interactInfo.talkState == NPC_TALK_STATE_IDLE) {
+        static s16 sMoveTimer = 80;
+        static s16 sCooldown = 0;
+        static u8 sMoving = 1;
+
+        if (sCooldown > 0) {
+            sCooldown--;
+        }
+
+        // Colisión con paredes de escena
+        bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
+        // Caída brusca al vacío
+        bool dropAhead = (this->actor.world.pos.y - this->actor.floorHeight) > 14.0f;
+        // Colisión contra otros actores (caballos, Link, cercas dinámicas)
+        bool actorHit = (this->collider.base.ocFlags1 & OC1_HIT) != 0;
+
+        if ((wallHit || dropAhead || actorHit) && sCooldown == 0) {
+            if (wallHit) {
+                // Rebote perpendicular idéntico a Link (wallYaw)
+                this->actor.world.rot.y = this->actor.wallYaw + 0x8000;
+            } else {
+                // Media vuelta si hay abismo o caballo
+                this->actor.world.rot.y += 0x8000;
+            }
+            this->actor.shape.rot.y = this->actor.world.rot.y;
+            this->actor.speedXZ = 0.0f;
+            sMoving = 0;
+            sMoveTimer = 40;
+            sCooldown = 30; // Evita giros espasmódicos
+        } else {
+            if (sMoveTimer > 0) {
+                sMoveTimer--;
+            } else {
+                // Alterna entre caminar y detenerse a observar
+                sMoving = (sMoving == 0) ? 1 : 0;
+                sMoveTimer = (sMoving == 1) ? (90 + (play->state.frames % 80)) : (45 + (play->state.frames % 40));
+
+                if (sMoving == 1 && sCooldown == 0) {
+                    // Variación suave de ángulo
+                    this->actor.world.rot.y += (s16)((play->state.frames % 0x1400) - 0x0A00);
+                    this->actor.shape.rot.y = this->actor.world.rot.y;
+                }
+            }
+
+            if (sMoving == 1) {
+                this->actor.speedXZ = 1.0f;
+                this->actor.shape.rot.y = this->actor.world.rot.y; // Mirar siempre hacia adelante
+            } else {
+                this->actor.speedXZ = 0.0f;
+            }
+        }
+    } else {
+        // Detenerse en seco al interactuar o hablar
+        this->actor.speedXZ = 0.0f;
+    }
+
+    // Parámetros de proyección de Link (altura de pared 26.0f, radio 18.0f)
+    Actor_MoveXZGravity(&this->actor);
+    Actor_UpdateBgCheckInfo(play, &this->actor, 26.0f, 18.0f, 0.0f, 4);
+
     Collider_UpdateCylinder(&this->actor, &this->collider);
     CollisionCheck_SetOC(play, &play->colChkCtx, &this->collider.base);
+
     SkelAnime_Update(&this->skelAnime);
     EnMa1_UpdateEyes(this);
-    this->actionFunc(this, play);
+
     if (this->actionFunc != EnMa1_DoNothing) {
-        Npc_UpdateTalking(play, &this->actor, &this->interactInfo.talkState, (f32)this->collider.dim.radius + 30.0f,
-                          EnMa1_GetText, func_80AA0778);
+        Npc_UpdateTalking(
+            play,
+            &this->actor,
+            &this->interactInfo.talkState,
+            (f32)this->collider.dim.radius + 35.0f,
+            EnMa1_GetText,
+            func_80AA0778
+        );
     }
-    func_80AA0B74(this);
-    func_80AA0AF4(this, play);
+
+    this->actionFunc(this, play);
 }
 
 s32 EnMa1_OverrideLimbDraw(PlayState* play, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* thisx) {
