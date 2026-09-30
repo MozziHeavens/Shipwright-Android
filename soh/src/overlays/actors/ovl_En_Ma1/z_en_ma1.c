@@ -31,6 +31,7 @@ void EnMa1_Draw(Actor* thisx, PlayState* play);
 u16 EnMa1_GetText(PlayState* play, Actor* this);
 s16 func_80AA0778(PlayState* play, Actor* this);
 
+u16 EnMa1_GetText(PlayState* play, Actor* thisx);
 void func_80AA0D88(EnMa1* this, PlayState* play);
 void func_80AA0EA0(EnMa1* this, PlayState* play);
 void func_80AA0EFC(EnMa1* this, PlayState* play);
@@ -217,6 +218,8 @@ static void EnMa1_InjectDynamicMessage(PlayState* play) {
 }
 
 u16 EnMa1_GetText(PlayState* play, Actor* thisx) {
+    EnMa1_InjectDynamicMessage(play);
+    return 0x204A;
     bool malonReturnedFromCastle = GameInteractor_Should(VB_MALON_RETURN_FROM_CASTLE,
                                                          Flags_GetEventChkInf(EVENTCHKINF_TALON_RETURNED_FROM_CASTLE));
     bool malonTaughtEponasSong =
@@ -611,7 +614,7 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
             &this->actor,
             &this->interactInfo.talkState,
             (f32)this->collider.dim.radius + 35.0f,
-            NULL,
+            EnMa1_GetText,
             func_80AA0EA0
         );
     }
