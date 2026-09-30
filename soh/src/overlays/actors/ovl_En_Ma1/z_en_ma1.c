@@ -533,6 +533,8 @@ void func_80AA0F44(EnMa1* this, PlayState* play) {
             this->actor.textId = 0x2061;
                                             Malon_UpdateAIPrompt(play, this);
         Malon_ReadAIMemory();
+        Malon_UpdateAIPrompt(play, this);
+        Malon_ReadAIMemory();
         Message_StartTextbox(play, this->actor.textId, NULL);
             this->interactInfo.talkState = NPC_TALK_STATE_TALKING;
             this->actor.flags |= ACTOR_FLAG_TALK_OFFER_AUTO_ACCEPTED;
