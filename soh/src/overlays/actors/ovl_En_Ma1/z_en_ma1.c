@@ -549,6 +549,25 @@ void func_80AA1150(EnMa1* this, PlayState* play) {
 void EnMa1_DoNothing(EnMa1* this, PlayState* play) {
 }
 
+
+static void EnMa1_TalkAction(EnMa1* this, PlayState* play) {
+    if (this->interactInfo.talkState != NPC_TALK_STATE_IDLE) {
+        if (this->skelAnime.animation != &gMalonChildIdleAnim) {
+            EnMa1_ChangeAnim(this, ENMA1_ANIM_1);
+        }
+    }
+
+    if ((Message_GetState(&play->msgCtx) == TEXT_STATE_CLOSING) ||
+        (Message_GetState(&play->msgCtx) == TEXT_STATE_DONE) ||
+        (Message_GetState(&play->msgCtx) == TEXT_STATE_EVENT)) {
+        if (Message_ShouldAdvance(play)) {
+            Message_CloseTextbox(play);
+            this->interactInfo.talkState = NPC_TALK_STATE_IDLE;
+            this->actionFunc = func_80AA0D88;
+        }
+    }
+}
+
 void EnMa1_Update(Actor* thisx, PlayState* play) {
     EnMa1* this = (EnMa1*)thisx;
     s32 pad;
@@ -609,14 +628,16 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
     EnMa1_UpdateEyes(this);
 
     if (this->actionFunc != EnMa1_DoNothing) {
-        Npc_UpdateTalking(
-            play,
-            &this->actor,
-            &this->interactInfo.talkState,
-            (f32)this->collider.dim.radius + 35.0f,
-            EnMa1_GetText,
-            func_80AA0EA0
-        );
+        if (Npc_UpdateTalking(
+                play,
+                &this->actor,
+                &this->interactInfo.talkState,
+                (f32)this->collider.dim.radius + 35.0f,
+                EnMa1_GetText,
+                func_80AA0D88
+            )) {
+            this->actionFunc = EnMa1_TalkAction;
+        }
     }
     this->actionFunc(this, play);
 }
