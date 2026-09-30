@@ -2488,6 +2488,11 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 promptFile << "time=" << gSaveContext.dayTime << std::endl;
                 promptFile << "scene=" << play->sceneNum << std::endl;
                 promptFile << "is_day=" << (IS_DAY ? 1 : 0) << std::endl;
+                Player* player = GET_PLAYER(play);
+                promptFile << "player_health=" << gSaveContext.health << "/" << gSaveContext.healthCapacity << std::endl;
+                promptFile << "player_rupees=" << gSaveContext.rupees << std::endl;
+                promptFile << "has_sword=" << ((player->stateFlags1 & PLAYER_STATE1_HOLDING_SWORD) ? 1 : 0) << std::endl;
+                promptFile << "has_ocarina=" << (INV_CONTENT(ITEM_OCARINA_FAIRY) != ITEM_NONE || INV_CONTENT(ITEM_OCARINA_TIME) != ITEM_NONE ? 1 : 0) << std::endl;
                 promptFile.close();
             }
         }
