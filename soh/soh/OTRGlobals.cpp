@@ -2504,7 +2504,8 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             if (memFile.is_open()) {
                 std::string line;
                 while (std::getline(memFile, line)) {
-                    while (!line.empty() && (line.back() == '' || line.back() == '
+                    while (!line.empty() && (line.back() == '
+' || line.back() == '
 ')) {
                         line.pop_back();
                     }
@@ -2536,6 +2537,59 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
         messageEntry.AutoFormat();
     }
+        if (textId >= 0x2041 && textId <= 0x204A) {
+        std::string malonDir = "/sdcard/Download/Hyrule/Characters/Malon";
+
+        // Escribir prompt.txt con salto de línea estándar
+        {
+            std::ofstream promptFile(malonDir + "/prompt.txt");
+            if (promptFile.is_open()) {
+                promptFile << "day=" << gSaveContext.totalDays << std::endl;
+                promptFile << "time=" << gSaveContext.dayTime << std::endl;
+                promptFile << "scene=" << play->sceneNum << std::endl;
+                promptFile << "is_day=" << (IS_DAY ? 1 : 0) << std::endl;
+                promptFile.close();
+            }
+        }
+
+        // Leer memory.txt
+        std::vector<std::string> lines;
+        {
+            std::ifstream memFile(malonDir + "/memory.txt");
+            if (memFile.is_open()) {
+                std::string line;
+                while (std::getline(memFile, line)) {
+                    while (!line.empty() && (line.back() == 13 || line.back() == 10)) {
+                        line.pop_back();
+                    }
+                    if (line.size() > 4) {
+                        lines.push_back(line);
+                    }
+                }
+                memFile.close();
+            }
+        }
+
+        std::string txt;
+        if (!lines.empty()) {
+            size_t idx = (size_t)(gSaveContext.totalDays + play->state.frames) % lines.size();
+            txt = lines[idx];
+            for (size_t i = 0; i < txt.size(); i++) {
+                if (txt[i] == '|' || txt[i] == 10) {
+                    txt[i] = '&';
+                }
+            }
+        } else {
+            txt = IS_DAY
+                ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
+                : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+        }
+
+        messageEntry = CustomMessage(txt, txt, txt);
+        messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
+        messageEntry.AutoFormat();
+    }
+
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
     switch (gSaveContext.language) {
         case LANGUAGE_FRA:
