@@ -2478,69 +2478,9 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry =
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
     }
-    if (textId >= 0x2041 && textId <= 0x204A) {
-        std::string malonDir = "/sdcard/Download/Hyrule/Characters/Malon";
-        
-        // 1. Escribir prompt.txt para que el cerebro/puente sepa el contexto
-        {
-            std::ofstream promptFile(malonDir + "/prompt.txt");
-            if (promptFile.is_open()) {
-                promptFile << "day=" << gSaveContext.totalDays << "
-";
-                promptFile << "time=" << gSaveContext.dayTime << "
-";
-                promptFile << "scene=" << play->sceneNum << "
-";
-                promptFile << "is_day=" << (IS_DAY ? 1 : 0) << "
-";
-                promptFile.close();
-            }
-        }
-
-        // 2. Leer memory.txt (alimentado por bridge_hybrid.py o descargas offline)
-        std::vector<std::string> lines;
-        {
-            std::ifstream memFile(malonDir + "/memory.txt");
-            if (memFile.is_open()) {
-                std::string line;
-                while (std::getline(memFile, line)) {
-                    while (!line.empty() && (line.back() == '
-' || line.back() == '
-')) {
-                        line.pop_back();
-                    }
-                    if (line.size() > 4) {
-                        lines.push_back(line);
-                    }
-                }
-                memFile.close();
-            }
-        }
-
-        std::string txt;
-        if (!lines.empty()) {
-            size_t idx = (size_t)(gSaveContext.totalDays + play->state.frames) % lines.size();
-            txt = lines[idx];
-            for (char& ch : txt) {
-                if (ch == '|' || ch == '
-') {
-                    ch = '&';
-                }
-            }
-        } else {
-            txt = IS_DAY
-                ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
-                : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
-        }
-
-        messageEntry = CustomMessage(txt, txt, txt);
-        messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
-        messageEntry.AutoFormat();
-    }
         if (textId >= 0x2041 && textId <= 0x204A) {
         std::string malonDir = "/sdcard/Download/Hyrule/Characters/Malon";
 
-        // Escribir prompt.txt con salto de línea estándar
         {
             std::ofstream promptFile(malonDir + "/prompt.txt");
             if (promptFile.is_open()) {
@@ -2552,7 +2492,6 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             }
         }
 
-        // Leer memory.txt
         std::vector<std::string> lines;
         {
             std::ifstream memFile(malonDir + "/memory.txt");
