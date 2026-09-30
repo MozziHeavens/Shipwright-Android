@@ -218,7 +218,7 @@ s32 func_80AA08C4(EnMa1* this, PlayState* play) {
     if (play->sceneNum != SCENE_LON_LON_RANCH) {
         return 0;
     }
-    if ((this->actor.shape.rot.z == 3) && IS_DAY && malonReturnedFromCastle) {
+    if ((this->actor.shape.rot.z == 3) && malonReturnedFromCastle) {
         return 1;
     }
     return 0;
