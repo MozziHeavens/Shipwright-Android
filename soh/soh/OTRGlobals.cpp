@@ -2478,30 +2478,51 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry =
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
     }
-    if (textId == 0x2041) {
-        std::vector<std::string> loreLines;
+    if (textId >= 0x2041 && textId <= 0x204A) {
+        std::string malonDir = "/sdcard/Download/Hyrule/Characters/Malon";
+        
+        // 1. Escribir prompt.txt para que el cerebro/puente sepa el contexto
         {
-            std::ifstream loreFile("/sdcard/Download/Hyrule/Characters/Malon/memory.txt");
-            if (loreFile.is_open()) {
+            std::ofstream promptFile(malonDir + "/prompt.txt");
+            if (promptFile.is_open()) {
+                promptFile << "day=" << gSaveContext.totalDays << "
+";
+                promptFile << "time=" << gSaveContext.dayTime << "
+";
+                promptFile << "scene=" << play->sceneNum << "
+";
+                promptFile << "is_day=" << (IS_DAY ? 1 : 0) << "
+";
+                promptFile.close();
+            }
+        }
+
+        // 2. Leer memory.txt (alimentado por bridge_hybrid.py o descargas offline)
+        std::vector<std::string> lines;
+        {
+            std::ifstream memFile(malonDir + "/memory.txt");
+            if (memFile.is_open()) {
                 std::string line;
-                while (std::getline(loreFile, line)) {
-                    while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) {
+                while (std::getline(memFile, line)) {
+                    while (!line.empty() && (line.back() == '' || line.back() == '
+')) {
                         line.pop_back();
                     }
-                    if (line.size() > 5) {
-                        loreLines.push_back(line);
+                    if (line.size() > 4) {
+                        lines.push_back(line);
                     }
                 }
-                loreFile.close();
+                memFile.close();
             }
         }
 
         std::string txt;
-        if (!loreLines.empty()) {
-            size_t idx = (size_t)(gSaveContext.totalDays + play->state.frames) % loreLines.size();
-            txt = loreLines[idx];
+        if (!lines.empty()) {
+            size_t idx = (size_t)(gSaveContext.totalDays + play->state.frames) % lines.size();
+            txt = lines[idx];
             for (char& ch : txt) {
-                if (ch == '|' || ch == '\n') {
+                if (ch == '|' || ch == '
+') {
                     ch = '&';
                 }
             }
