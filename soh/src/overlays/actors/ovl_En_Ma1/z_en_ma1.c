@@ -612,8 +612,8 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
             &this->actor,
             &this->interactInfo.talkState,
             (f32)this->collider.dim.radius + 35.0f,
-            func_80AA0BC4,
-            func_80AA0EA0
+            (void*)func_80AA0BC4,
+            (void*)func_80AA0EA0
         );
     }
     this->actionFunc(this, play);
