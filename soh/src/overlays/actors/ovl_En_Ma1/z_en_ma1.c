@@ -23,17 +23,16 @@
     (ACTOR_FLAG_ATTENTION_ENABLED | ACTOR_FLAG_FRIENDLY | ACTOR_FLAG_UPDATE_CULLING_DISABLED | \
      ACTOR_FLAG_DRAW_CULLING_DISABLED | ACTOR_FLAG_UPDATE_DURING_OCARINA)
 
-void EnMa1_Init(Actor* thisx, PlayState* play);
-void EnMa1_Destroy(Actor* thisx, PlayState* play);
 
-static char sMalonCustomText[128] = "Hola, chico hada! Que lindo dia hace hoy en el rancho.";
+
+static char sMalonCustomText[128] = "Hola fairy boy! Que lindo dia en el rancho.";
 
 void Malon_UpdateAIPrompt(PlayState* play, EnMa1* this) {
     FILE* fp = fopen("/sdcard/Download/Hyrule/Characters/Malon/prompt.txt", "w");
     if (fp != NULL) {
         int health = gSaveContext.health;
         int isNight = IS_NIGHT;
-        fprintf(fp, "Link habla con Malon en Lon Lon Ranch. Tiempo: %s. Salud Link: %d corazones.\n", 
+        fprintf(fp, "Link habla con Malon en Lon Lon Ranch. Tiempo: %s. Salud Link: %d corazones.\n",
                 isNight ? "de noche" : "de dia", (health > 0) ? (health / 16) : 1);
         fclose(fp);
     }
@@ -43,12 +42,14 @@ void Malon_ReadAIMemory(void) {
     FILE* fp = fopen("/sdcard/Download/Hyrule/Characters/Malon/memory.txt", "r");
     if (fp != NULL) {
         if (fgets(sMalonCustomText, sizeof(sMalonCustomText), fp) != NULL) {
-            // Eliminar saltos de linea
             sMalonCustomText[strcspn(sMalonCustomText, "\r\n")] = 0;
         }
         fclose(fp);
     }
 }
+
+void EnMa1_Init(Actor* thisx, PlayState* play);
+void EnMa1_Destroy(Actor* thisx, PlayState* play);
 
 void EnMa1_Update(Actor* thisx, PlayState* play);
 void EnMa1_Draw(Actor* thisx, PlayState* play);
@@ -530,7 +531,7 @@ void func_80AA0F44(EnMa1* this, PlayState* play) {
             player->stateFlags2 |= PLAYER_STATE2_PLAY_FOR_ACTOR;
             player->unk_6A8 = &this->actor;
             this->actor.textId = 0x2061;
-            Malon_UpdateAIPrompt(play, this);
+                                            Malon_UpdateAIPrompt(play, this);
         Malon_ReadAIMemory();
         Message_StartTextbox(play, this->actor.textId, NULL);
             this->interactInfo.talkState = NPC_TALK_STATE_TALKING;
