@@ -3363,7 +3363,7 @@ Actor* Actor_Spawn(ActorContext* actorCtx, PlayState* play, s16 actorId, f32 pos
 
     memset((u8*)actor, 0, dbEntry->instanceSize);
     actor->id = dbEntry->id;
-    actor->flags = dbEntry->flags;
+    actor->flags = dbEntry->flags | ACTOR_FLAG_DRAW_CULLING_DISABLED;
 
     if (dbEntry->id == ACTOR_EN_PART) {
         actor->objBankIndex = rotZ;

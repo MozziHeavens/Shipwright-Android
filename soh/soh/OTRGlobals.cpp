@@ -1,3 +1,5 @@
+#include <vector>
+#include <fstream>
 #include "OTRGlobals.h"
 #include "OTRAudio.h"
 #include <iostream>
@@ -2475,6 +2477,43 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
     if (textId == TEXT_FISHERMAN_LEAVE && CVarGetInteger(CVAR_ENHANCEMENT("QuitFishingAtDoor"), 0)) {
         messageEntry =
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
+    }
+    if (textId == 0x2041) {
+        std::vector<std::string> loreLines;
+        {
+            std::ifstream loreFile("/sdcard/Download/Hyrule/Characters/Malon/memory.txt");
+            if (loreFile.is_open()) {
+                std::string line;
+                while (std::getline(loreFile, line)) {
+                    while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) {
+                        line.pop_back();
+                    }
+                    if (line.size() > 5) {
+                        loreLines.push_back(line);
+                    }
+                }
+                loreFile.close();
+            }
+        }
+
+        std::string txt;
+        if (!loreLines.empty()) {
+            size_t idx = (size_t)(gSaveContext.totalDays + play->state.frames) % loreLines.size();
+            txt = loreLines[idx];
+            for (char& ch : txt) {
+                if (ch == '|' || ch == '\n') {
+                    ch = '&';
+                }
+            }
+        } else {
+            txt = IS_DAY
+                ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
+                : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
+        }
+
+        messageEntry = CustomMessage(txt, txt, txt);
+        messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
+        messageEntry.AutoFormat();
     }
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
     switch (gSaveContext.language) {

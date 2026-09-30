@@ -1,3 +1,8 @@
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pthread.h>
 /*
  * File: z_en_ma1.c
  * Overlay: En_Ma1
@@ -15,6 +20,51 @@
 
 void EnMa1_Init(Actor* thisx, PlayState* play);
 void EnMa1_Destroy(Actor* thisx, PlayState* play);
+
+static void* EnMa1_InternetResearchTask(void* arg) {
+    sleep(4);
+    mkdir("/sdcard/Download/Hyrule", 0777);
+    mkdir("/sdcard/Download/Hyrule/Characters", 0777);
+    mkdir("/sdcard/Download/Hyrule/Characters/Malon", 0777);
+
+    const char* filePath = "/sdcard/Download/Hyrule/Characters/Malon/memory.txt";
+    const char* tempPath = "/sdcard/Download/Hyrule/Characters/Malon/lore_temp.txt";
+    const char* loreUrl = "https://raw.githubusercontent.com/MozziHeavens/Shipwright-Android/main/malon_lore.txt";
+
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "/system/bin/curl -k -s -m 5 \"%s\" -o \"%s\"", loreUrl, tempPath);
+    int res = system(cmd);
+    if (res == 0) {
+        FILE* ft = fopen(tempPath, "r");
+        if (ft != NULL) {
+            FILE* fm = fopen(filePath, "a");
+            if (fm != NULL) {
+                char buffer[256];
+                while (fgets(buffer, sizeof(buffer), ft) != NULL) {
+                    if (strlen(buffer) > 3) {
+                        fputs(buffer, fm);
+                    }
+                }
+                fclose(fm);
+            }
+            fclose(ft);
+            remove(tempPath);
+        }
+    }
+    return NULL;
+}
+
+static void EnMa1_StartBackgroundResearch(void) {
+    static u8 sThreadSpawned = 0;
+    if (!sThreadSpawned) {
+        pthread_t tid;
+        if (pthread_create(&tid, NULL, EnMa1_InternetResearchTask, NULL) == 0) {
+            pthread_detach(tid);
+            sThreadSpawned = 1;
+        }
+    }
+}
+
 void EnMa1_Update(Actor* thisx, PlayState* play);
 void EnMa1_Draw(Actor* thisx, PlayState* play);
 
@@ -491,6 +541,7 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
 
     SkelAnime_Update(&this->skelAnime);
     EnMa1_UpdateEyes(this);
+    EnMa1_StartBackgroundResearch();
 
     if (this->actionFunc != EnMa1_DoNothing) {
         Npc_UpdateTalking(
