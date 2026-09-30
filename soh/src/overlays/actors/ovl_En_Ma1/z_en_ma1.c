@@ -627,15 +627,16 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
     SkelAnime_Update(&this->skelAnime);
     EnMa1_UpdateEyes(this);
 
-    if (this->actionFunc != EnMa1_DoNothing) {
-        if (Npc_UpdateTalking(
-                play,
-                &this->actor,
-                &this->interactInfo.talkState,
-                (f32)this->collider.dim.radius + 35.0f,
-                EnMa1_GetText,
-                func_80AA0D88
-            )) {
+        if (this->actionFunc != EnMa1_DoNothing) {
+        Npc_UpdateTalking(
+            play,
+            &this->actor,
+            &this->interactInfo.talkState,
+            (f32)this->collider.dim.radius + 35.0f,
+            EnMa1_GetText,
+            func_80AA0D88
+        );
+        if (this->interactInfo.talkState != NPC_TALK_STATE_IDLE) {
             this->actionFunc = EnMa1_TalkAction;
         }
     }
