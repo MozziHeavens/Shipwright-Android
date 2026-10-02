@@ -2482,10 +2482,47 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
     Actor* talker = player ? player->talkActor : nullptr;
     std::string charDir = "";
     if (talker != nullptr) {
-        if (textId >= 0x2041 && textId <= 0x204A && talker->id == ACTOR_EN_MA1) {
-            charDir = "/sdcard/Download/Hyrule/Characters/Malon";
-        } else if (talker->id == ACTOR_EN_IN && LINK_IS_CHILD) {
-            charDir = "/sdcard/Download/Hyrule/Characters/Ingo";
+        struct NpcRoute {
+            s16 actorId;
+            const char* folder;
+        };
+        static const NpcRoute sNpcTable[] = {
+            { ACTOR_EN_MA1, "Malon" },
+            { ACTOR_EN_MA2, "Malon/Adulta" },
+            { ACTOR_EN_IN,  "Ingo" },
+            { ACTOR_EN_TA,  "Talon" },
+            { ACTOR_EN_SA,  "Saria" },
+            { ACTOR_EN_MD,  "Mido" },
+            { ACTOR_EN_ZL1, "Zelda" },
+            { ACTOR_EN_DU,  "Darunia" },
+            { ACTOR_EN_RU1, "Ruto" },
+            { ACTOR_EN_RU2, "Ruto/Adulta" },
+            { ACTOR_EN_NIW_LADY, "Anju" },
+            { ACTOR_EN_HEISHI1, "Guard_Castle" },
+            { ACTOR_EN_HEISHI2, "Guard_Gate" },
+            { ACTOR_EN_HEISHI3, "Guard_Town" },
+            { ACTOR_EN_HEISHI4, "Guard_Info" },
+            { ACTOR_EN_GO,  "Goron" },
+            { ACTOR_EN_GO2, "Goron_Big" },
+            { ACTOR_EN_ZO,  "Zora" },
+            { ACTOR_EN_GE1, "Gerudo_Guard" },
+            { ACTOR_EN_GE2, "Gerudo_Archer" },
+            { ACTOR_EN_GE3, "Gerudo" },
+            { ACTOR_EN_GELDB, "Gerudo_Fighter" },
+            { ACTOR_EN_HY,  "Townsperson" },
+            { ACTOR_EN_KO,  "Kokiri" },
+        };
+
+        // Filtro de seguridad para Malon nina (no romper cinematicas iniciales)
+        if (talker->id == ACTOR_EN_MA1 && (textId < 0x2041 || textId > 0x204A)) {
+            charDir = "";
+        } else {
+            for (const auto& route : sNpcTable) {
+                if (talker->id == route.actorId) {
+                    charDir = std::string("/sdcard/Download/Hyrule/Characters/") + route.folder;
+                    break;
+                }
+            }
         }
     }
     if (!charDir.empty()) {
@@ -2509,11 +2546,16 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
 
         std::vector<std::string> lines;
         {
-            char idFileName[64];
-            snprintf(idFileName, sizeof(idFileName), "/0x%X.txt", textId);
-            std::ifstream memFile(charDir + idFileName);
+            char choiceFileName[64];
+            snprintf(choiceFileName, sizeof(choiceFileName), "/0x%X_choice%d.txt", textId, (int)play->msgCtx.choiceIndex);
+            std::ifstream memFile(charDir + choiceFileName);
             if (!memFile.is_open()) {
-                memFile.open(charDir + "/memory.txt");
+                char idFileName[64];
+                snprintf(idFileName, sizeof(idFileName), "/0x%X.txt", textId);
+                memFile.open(charDir + idFileName);
+                if (!memFile.is_open()) {
+                    memFile.open(charDir + "/memory.txt");
+                }
             }
             if (memFile.is_open()) {
                 std::string line;
