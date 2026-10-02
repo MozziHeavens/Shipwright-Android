@@ -2480,11 +2480,18 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
     }
         Player* player = GET_PLAYER(play);
     Actor* talker = player ? player->talkActor : nullptr;
-    if (textId >= 0x2041 && textId <= 0x204A && talker != nullptr && talker->id == ACTOR_EN_MA1) {
-        std::string malonDir = "/sdcard/Download/Hyrule/Characters/Malon";
+    std::string charDir = "";
+    if (talker != nullptr) {
+        if (textId >= 0x2041 && textId <= 0x204A && talker->id == ACTOR_EN_MA1) {
+            charDir = "/sdcard/Download/Hyrule/Characters/Malon";
+        } else if (talker->id == ACTOR_EN_IN && LINK_IS_CHILD) {
+            charDir = "/sdcard/Download/Hyrule/Characters/Ingo";
+        }
+    }
+    if (!charDir.empty()) {
 
         {
-            std::ofstream promptFile(malonDir + "/prompt.txt");
+            std::ofstream promptFile(charDir + "/prompt.txt");
             if (promptFile.is_open()) {
                 promptFile << "day=" << gSaveContext.totalDays << std::endl;
                 promptFile << "time=" << gSaveContext.dayTime << std::endl;
@@ -2500,7 +2507,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
 
         std::vector<std::string> lines;
         {
-            std::ifstream memFile(malonDir + "/memory.txt");
+            std::ifstream memFile(charDir + "/memory.txt");
             if (memFile.is_open()) {
                 std::string line;
                 while (std::getline(memFile, line)) {
