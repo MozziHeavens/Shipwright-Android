@@ -2495,6 +2495,8 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             if (promptFile.is_open()) {
                 promptFile << "day=" << gSaveContext.totalDays << std::endl;
                 promptFile << "time=" << gSaveContext.dayTime << std::endl;
+                promptFile << "textId=" << std::hex << textId << std::endl;
+                promptFile << "choiceIndex=" << (int)play->msgCtx.choiceIndex << std::endl;
                 promptFile << "scene=" << play->sceneNum << std::endl;
                 promptFile << "is_day=" << (IS_DAY ? 1 : 0) << std::endl;
                 promptFile << "player_health=" << gSaveContext.health << "/" << gSaveContext.healthCapacity << std::endl;
@@ -2507,7 +2509,12 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
 
         std::vector<std::string> lines;
         {
-            std::ifstream memFile(charDir + "/memory.txt");
+            char idFileName[64];
+            snprintf(idFileName, sizeof(idFileName), "/0x%X.txt", textId);
+            std::ifstream memFile(charDir + idFileName);
+            if (!memFile.is_open()) {
+                memFile.open(charDir + "/memory.txt");
+            }
             if (memFile.is_open()) {
                 std::string line;
                 while (std::getline(memFile, line)) {
