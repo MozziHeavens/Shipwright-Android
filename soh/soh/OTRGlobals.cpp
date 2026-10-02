@@ -2478,7 +2478,9 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         messageEntry =
             CustomMessageManager::Instance->RetrieveMessage(customMessageTableID, TEXT_FISHERMAN_LEAVE, MF_FORMATTED);
     }
-        if (textId >= 0x2041 && textId <= 0x204A) {
+        Player* player = GET_PLAYER(play);
+    Actor* talker = player ? player->talkActor : nullptr;
+    if (textId >= 0x2041 && textId <= 0x204A && talker != nullptr && talker->id == ACTOR_EN_MA1) {
         std::string malonDir = "/sdcard/Download/Hyrule/Characters/Malon";
 
         {
