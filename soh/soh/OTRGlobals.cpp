@@ -2193,6 +2193,30 @@ static const char* ReboomItemName(int id) {
     }
 }
 
+// ReBoom: la IA (memory.txt) solo habla en los IDs listados en ids_seguros.txt
+static bool ReboomIdSeguro(const std::string& dir, unsigned int textId) {
+    std::ifstream f(dir + "/ids_seguros.txt");
+    if (!f.is_open()) return false;
+    std::string l;
+    while (std::getline(f, l)) {
+        size_t p = l.find_first_not_of(" \t\r");
+        if (p == std::string::npos || l[p] == '#') continue;
+        const char* s = l.c_str() + p;
+        if (s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+        unsigned long v = 0;
+        for (; *s; s++) {
+            char c = *s; int d;
+            if (c >= '0' && c <= '9') d = c - '0';
+            else if (c >= 'a' && c <= 'f') d = c - 'a' + 10;
+            else if (c >= 'A' && c <= 'F') d = c - 'A' + 10;
+            else break;
+            v = v * 16 + d;
+        }
+        if (v == textId) return true;
+    }
+    return false;
+}
+
 // ReBoom: estado de preguntas personalizadas
 extern "C" u16 gReboomPendingQuestion = 0;
 extern "C" u8 gReboomAnswerMode = 0;
@@ -2586,7 +2610,15 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                     if (q & (1u << 19)) addObj("Rubi Goron");
                     if (q & (1u << 20)) addObj("Zafiro Zora");
                     if (q & (1u << 13)) addObj("Cancion de Epona");
+                    if (q & (1u << 22)) addObj("Tarjeta de miembro Gerudo");
+                    if (q & (1u << 0)) addObj("Medallon del Bosque");
+                    if (q & (1u << 1)) addObj("Medallon del Fuego");
+                    if (q & (1u << 2)) addObj("Medallon del Agua");
+                    if (q & (1u << 3)) addObj("Medallon del Espiritu");
+                    if (q & (1u << 4)) addObj("Medallon de la Sombra");
+                    if (q & (1u << 5)) addObj("Medallon de la Luz");
                     promptFile << "objetos=" << objetos << std::endl;
+                    promptFile << "edad=" << (gSaveContext.linkAge == 0 ? "adulto" : "nino") << std::endl;
                 }
                 promptFile.close();
             }
@@ -2614,7 +2646,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 snprintf(idFileName, sizeof(idFileName), "/0x%X.txt", textId);
                 memFile.open(charDir + idFileName);
                 if (!memFile.is_open()) {
-                    memFile.open(charDir + "/memory.txt");
+                    if (ReboomIdSeguro(charDir, textId)) memFile.open(charDir + "/memory.txt");
                 }
             }
             if (memFile.is_open()) {
