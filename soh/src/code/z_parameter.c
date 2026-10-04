@@ -5073,6 +5073,68 @@ const char* digitTextures[] = { gCounterDigit0Tex, gCounterDigit1Tex, gCounterDi
                                 gCounterDigit2Tex, gCounterDigit3Tex, gCounterDigit4Tex, gCounterDigit5Tex,
                                 gCounterDigit6Tex, gCounterDigit7Tex, gCounterDigit8Tex };
 
+// ReBoom: letras de la fuente de los dialogos (nes_font_static) para el reloj
+static const struct { u8 c; u8 w; const char* tex; } sReboomFont[] = {
+    { 'D', 11, "__OTR__textures/nes_font_static/gMsgChar44LatinCapitalLetterDTex" },
+    { 'J', 8, "__OTR__textures/nes_font_static/gMsgChar4ALatinCapitalLetterJTex" },
+    { 'L', 8, "__OTR__textures/nes_font_static/gMsgChar4CLatinCapitalLetterLTex" },
+    { 'M', 13, "__OTR__textures/nes_font_static/gMsgChar4DLatinCapitalLetterMTex" },
+    { 'N', 11, "__OTR__textures/nes_font_static/gMsgChar4ELatinCapitalLetterNTex" },
+    { 'S', 10, "__OTR__textures/nes_font_static/gMsgChar53LatinCapitalLetterSTex" },
+    { 'T', 9, "__OTR__textures/nes_font_static/gMsgChar54LatinCapitalLetterTTex" },
+    { 'V', 11, "__OTR__textures/nes_font_static/gMsgChar56LatinCapitalLetterVTex" },
+    { 'a', 8, "__OTR__textures/nes_font_static/gMsgChar61LatinSmallLetterATex" },
+    { 'b', 9, "__OTR__textures/nes_font_static/gMsgChar62LatinSmallLetterBTex" },
+    { 'c', 8, "__OTR__textures/nes_font_static/gMsgChar63LatinSmallLetterCTex" },
+    { 'd', 9, "__OTR__textures/nes_font_static/gMsgChar64LatinSmallLetterDTex" },
+    { 'e', 9, "__OTR__textures/nes_font_static/gMsgChar65LatinSmallLetterETex" },
+    { 'g', 9, "__OTR__textures/nes_font_static/gMsgChar67LatinSmallLetterGTex" },
+    { 'h', 8, "__OTR__textures/nes_font_static/gMsgChar68LatinSmallLetterHTex" },
+    { 'i', 4, "__OTR__textures/nes_font_static/gMsgChar69LatinSmallLetterITex" },
+    { 'l', 4, "__OTR__textures/nes_font_static/gMsgChar6CLatinSmallLetterLTex" },
+    { 'm', 12, "__OTR__textures/nes_font_static/gMsgChar6DLatinSmallLetterMTex" },
+    { 'n', 9, "__OTR__textures/nes_font_static/gMsgChar6ELatinSmallLetterNTex" },
+    { 'o', 9, "__OTR__textures/nes_font_static/gMsgChar6FLatinSmallLetterOTex" },
+    { 'r', 7, "__OTR__textures/nes_font_static/gMsgChar72LatinSmallLetterRTex" },
+    { 's', 8, "__OTR__textures/nes_font_static/gMsgChar73LatinSmallLetterSTex" },
+    { 't', 7, "__OTR__textures/nes_font_static/gMsgChar74LatinSmallLetterTTex" },
+    { 'u', 8, "__OTR__textures/nes_font_static/gMsgChar75LatinSmallLetterUTex" },
+    { 'v', 9, "__OTR__textures/nes_font_static/gMsgChar76LatinSmallLetterVTex" },
+    { 0x91, 8, "__OTR__textures/nes_font_static/gMsgChar91LatinSmallLetterAWithAcuteTex" },
+    { 0x96, 9, "__OTR__textures/nes_font_static/gMsgChar96LatinSmallLetterEWithAcuteTex" },
+    { 0x9B, 9, "__OTR__textures/nes_font_static/gMsgChar9BLatinSmallLetterOWithDiaeresisTex" },
+};
+
+static Gfx* Reboom_FontText(Gfx* gfx, const char* s, s32* px, s32 y, u8 r, u8 g, u8 b, u8 a) {
+    for (; *s != '\0'; s++) {
+        u8 c = (u8)*s;
+        const char* tex = NULL;
+        s32 w = 8;
+        u32 i;
+        for (i = 0; i < ARRAY_COUNT(sReboomFont); i++) {
+            if (sReboomFont[i].c == c) {
+                tex = sReboomFont[i].tex;
+                w = sReboomFont[i].w;
+                break;
+            }
+        }
+        if (tex == NULL) {
+            *px += 6;
+            continue;
+        }
+        gDPLoadTextureBlock_4b(gfx++, (void*)tex, G_IM_FMT_I, 16, 16, 0, G_TX_NOMIRROR | G_TX_CLAMP,
+                               G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
+        gDPSetPrimColor(gfx++, 0, 0, 0, 0, 0, a);
+        gSPWideTextureRectangle(gfx++, (*px + 1) << 2, (y + 1) << 2, (*px + 13) << 2, (y + 13) << 2,
+                                G_TX_RENDERTILE, 0, 0, 1365, 1365);
+        gDPSetPrimColor(gfx++, 0, 0, r, g, b, a);
+        gSPWideTextureRectangle(gfx++, *px << 2, y << 2, (*px + 12) << 2, (y + 12) << 2, G_TX_RENDERTILE, 0, 0,
+                                1365, 1365);
+        *px += (w * 3) / 4;
+    }
+    return gfx;
+}
+
 // ReBoom: reloj estilo Majora's Mask (dia en amarillo, icono de reloj y hora)
 void Interface_DrawReboomClock(PlayState* play) {
     InterfaceContext* interfaceCtx = &play->interfaceCtx;
@@ -5134,20 +5196,18 @@ void Interface_DrawReboomClock(PlayState* play) {
     OVERLAY_DISP = Gfx_TextureIA8(OVERLAY_DISP, gClockIconTex, 16, 16, x + nd * 8 + 4, y, 16, 16, 1 << 10, 1 << 10);
     gDPPipeSync(OVERLAY_DISP++);
     {
-        static const char* sDias[7] = { "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO" };
-        const char* periodo = (hh >= 6 && hh < 12) ? "MANANA" : ((hh >= 12 && hh < 18) ? "TARDE" : "NOCHE");
-        GfxPrint printer;
-        GfxPrint_Init(&printer);
-        GfxPrint_Open(&printer, OVERLAY_DISP);
-        GfxPrint_SetColor(&printer, 255, 220, 80, alpha);
-        const char* nombreDia = sDias[(day - 1) % 7];
-        GfxPrint_SetPosPx(&printer, x, y + 18);
-        GfxPrint_Printf(&printer, "%s", nombreDia);
-        GfxPrint_SetColor(&printer, esDia ? 255 : 150, esDia ? 255 : 200, 255, alpha);
-        GfxPrint_SetPosPx(&printer, x + ((s32)strlen(nombreDia) + 1) * 8, y + 18);
-        GfxPrint_Printf(&printer, "%s", periodo);
-        OVERLAY_DISP = GfxPrint_Close(&printer);
-        GfxPrint_Destroy(&printer);
+        // ReBoom: dia de la semana y periodo con la fuente del juego
+        static const char* sDias[7] = { "Lunes", "Martes", "Mi\x96rcoles", "Jueves", "Viernes", "S\x91" "bado", "Domingo" };
+        const char* periodo = (hh >= 6 && hh < 12) ? "Ma\x9b" "ana" : ((hh >= 12 && hh < 18) ? "Tarde" : "Noche");
+        s32 lx = (x < 4) ? 4 : x;
+        gDPPipeSync(OVERLAY_DISP++);
+        gDPSetCombineLERP(OVERLAY_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, PRIMITIVE, TEXEL0, 0,
+                          PRIMITIVE, 0);
+        OVERLAY_DISP = Reboom_FontText(OVERLAY_DISP, sDias[(day - 1) % 7], &lx, y + 17, 255, 220, 80, alpha);
+        lx += 5;
+        OVERLAY_DISP = Reboom_FontText(OVERLAY_DISP, periodo, &lx, y + 17, esDia ? 255 : 150, esDia ? 255 : 200, 255,
+                                       alpha);
+        gDPPipeSync(OVERLAY_DISP++);
     }
     CLOSE_DISPS(play->state.gfxCtx);
 }

@@ -393,6 +393,10 @@ void func_80AA0D88(EnMa1* this, PlayState* play) {
 
     if ((play->sceneNum == SCENE_HYRULE_CASTLE) && malonReturnedFromCastle) {
         Actor_Kill(&this->actor);
+    } else if ((this->actor.shape.rot.z == 7) && (this->interactInfo.talkState == NPC_TALK_STATE_ACTION)) {
+        // ReBoom: la Malon viajera nunca regala el Huevo (no tocar el intercambio de objetos)
+        this->interactInfo.talkState = NPC_TALK_STATE_IDLE;
+        play->msgCtx.msgMode = MSGMODE_TEXT_CLOSING;
     } else if (!malonReturnedFromCastle || malonTaughtEponasSong) {
         if (this->interactInfo.talkState == NPC_TALK_STATE_ACTION) {
             this->actionFunc = func_80AA0EA0;
@@ -498,6 +502,17 @@ void EnMa1_Update(Actor* thisx, PlayState* play) {
         }
 
         // Colisión con paredes de escena
+        // ReBoom: no alejarse de su lugar; si Link esta cerca, se queda quieta mirandolo
+        if (this->actor.xzDistToPlayer < 110.0f) {
+            this->actor.speedXZ = 0.0f;
+            Math_SmoothStepToS(&this->actor.shape.rot.y, this->actor.yawTowardsPlayer, 4, 0x800, 0x100);
+            this->actor.world.rot.y = this->actor.shape.rot.y;
+            sMoving = 0;
+            sMoveTimer = 30;
+        } else if (Actor_WorldDistXZToPoint(&this->actor, &this->actor.home.pos) > 120.0f) {
+            this->actor.world.rot.y = Math_Vec3f_Yaw(&this->actor.world.pos, &this->actor.home.pos);
+            this->actor.shape.rot.y = this->actor.world.rot.y;
+        }
         bool wallHit = (this->actor.bgCheckFlags & 8) != 0;
         // Caída brusca al vacío
         bool dropAhead = (this->actor.world.pos.y - this->actor.floorHeight) > 14.0f;
