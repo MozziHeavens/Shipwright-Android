@@ -2520,6 +2520,9 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             for (const auto& route : sNpcTable) {
                 if (talker->id == route.actorId) {
                     charDir = std::string("/sdcard/Download/Hyrule/Characters/") + route.folder;
+            if (talker->id == ACTOR_EN_IN && gSaveContext.linkAge == 0) {
+                charDir = "/sdcard/Download/Hyrule/Characters/Ingo/Adulto";
+            }
                     break;
                 }
             }
@@ -2532,7 +2535,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             if (promptFile.is_open()) {
                 promptFile << "day=" << gSaveContext.totalDays << std::endl;
                 promptFile << "time=" << gSaveContext.dayTime << std::endl;
-                promptFile << "textId=" << std::hex << textId << std::endl;
+                promptFile << "textId=" << std::hex << textId << std::dec << std::endl;
                 promptFile << "choiceIndex=" << (int)play->msgCtx.choiceIndex << std::endl;
                 promptFile << "scene=" << play->sceneNum << std::endl;
                 promptFile << "is_day=" << (IS_DAY ? 1 : 0) << std::endl;
@@ -2580,18 +2583,18 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                     txt[i] = '&';
                 }
             }
-        } else {
-            txt = IS_DAY
-                ? "Hi, Fairy Boy!&It is a lovely day at the ranch.&Day %r[[totalDays]]%w already!"
-                : "Oh! You are out late...&The stars are out at the ranch.&Day %r[[totalDays]]%w is almost over.";
         }
 
-        messageEntry = CustomMessage(txt, txt, txt);
-        messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
-        messageEntry.AutoFormat();
+        // Solo reemplazar si existe archivo del personaje.
+        // Si no hay archivo, se queda el texto original (es_patch.otr).
+        if (!txt.empty()) {
+            messageEntry = CustomMessage(txt, txt, txt);
+            messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
+            messageEntry.AutoFormat();
 
-        // Liberar espera forzada de Ocarina para permitir seleccion de items
-        play->msgCtx.ocarinaMode = 0;
+            // Liberar espera forzada de Ocarina para permitir seleccion de items
+            play->msgCtx.ocarinaMode = 0;
+        }
     }
 
     font->charTexBuf[0] = (messageEntry.GetTextBoxType() << 4) | messageEntry.GetTextBoxPosition();
