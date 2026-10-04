@@ -2166,6 +2166,10 @@ CustomMessage Randomizer_GetCustomGetItemMessage(Player* player) {
     return getItemText;
 }
 
+// ReBoom: estado de preguntas personalizadas
+extern "C" u16 gReboomPendingQuestion = 0;
+extern "C" u8 gReboomAnswerMode = 0;
+
 extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
     MessageContext* msgCtx = &play->msgCtx;
     uint16_t textId = msgCtx->textId;
@@ -2549,10 +2553,17 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
 
         std::vector<std::string> lines;
         {
-            char choiceFileName[64];
-            snprintf(choiceFileName, sizeof(choiceFileName), "/0x%X_choice%d.txt", textId, (int)play->msgCtx.choiceIndex);
-            std::ifstream memFile(charDir + choiceFileName);
-            if (!memFile.is_open()) {
+            std::ifstream memFile;
+            bool modoRespuesta = (gReboomAnswerMode != 0 && gReboomPendingQuestion == textId);
+            gReboomAnswerMode = 0;
+            gReboomPendingQuestion = 0;
+            if (modoRespuesta) {
+                // Respuesta segun lo que eligio el jugador
+                char choiceFileName[64];
+                snprintf(choiceFileName, sizeof(choiceFileName), "/0x%X_choice%d.txt", textId, (int)play->msgCtx.choiceIndex);
+                memFile.open(charDir + choiceFileName);
+            }
+            if (!memFile.is_open() && !modoRespuesta) {
                 char idFileName[64];
                 snprintf(idFileName, sizeof(idFileName), "/0x%X.txt", textId);
                 memFile.open(charDir + idFileName);
@@ -2588,6 +2599,10 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
         // Solo reemplazar si existe archivo del personaje.
         // Si no hay archivo, se queda el texto original (es_patch.otr).
         if (!txt.empty()) {
+            // Si el texto trae menu de eleccion, recordar la pregunta
+            if (txt.find('\x1B') != std::string::npos || txt.find('\x1C') != std::string::npos) {
+                gReboomPendingQuestion = textId;
+            }
             messageEntry = CustomMessage(txt, txt, txt);
             messageEntry.Replace("[[totalDays]]", std::to_string(gSaveContext.totalDays));
             messageEntry.AutoFormat();

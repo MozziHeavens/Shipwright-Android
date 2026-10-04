@@ -15,6 +15,10 @@
 #include "soh/SaveManager.h"
 #include "soh/ResourceManagerHelpers.h"
 
+// ReBoom: preguntas personalizadas (definidas en OTRGlobals.cpp)
+extern u16 gReboomPendingQuestion;
+extern u8 gReboomAnswerMode;
+
 // #region SOH [NTSC] - Allows custom messages to work on japanese
 static bool sDisplayNextMessageAsEnglish = false;
 static u8 sLastLanguage = LANGUAGE_ENG;
@@ -4639,6 +4643,14 @@ void Message_Update(PlayState* play) {
                         } else {
                             Message_ContinueTextbox(play, sNextTextId);
                         }
+                    } else if (gReboomPendingQuestion != 0 && gReboomPendingQuestion == msgCtx->textId &&
+                               (msgCtx->textboxEndType == TEXTBOX_ENDTYPE_2_CHOICE ||
+                                msgCtx->textboxEndType == TEXTBOX_ENDTYPE_3_CHOICE)) {
+                        // ReBoom: pregunta personalizada -> mostrar la respuesta elegida
+                        Audio_PlaySoundGeneral(NA_SE_SY_DECIDE, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+                                               &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+                        gReboomAnswerMode = 1;
+                        Message_ContinueTextbox(play, msgCtx->textId);
                     } else {
                         Audio_PlaySoundGeneral(NA_SE_SY_DECIDE, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
                                                &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
