@@ -1104,6 +1104,66 @@ void CheckAndCreateModFolder() {
     }
 }
 
+// ReBoom: itinerario de Malon (Characters/Malon/itinerario.txt)
+struct ReboomLugar { const char* nombre; s16 scene; };
+static const ReboomLugar sReboomLugares[] = {
+    { "RANCHO", SCENE_LON_LON_RANCH },       { "CAMPO", SCENE_HYRULE_FIELD },
+    { "KAKARIKO", SCENE_KAKARIKO_VILLAGE },  { "MERCADO", SCENE_MARKET_DAY },
+    { "RIO_ZORA", SCENE_ZORAS_RIVER },       { "DOMINIO_ZORA", SCENE_ZORAS_DOMAIN },
+    { "SENDERO_MONTE", SCENE_DEATH_MOUNTAIN_TRAIL }, { "CIUDAD_GORON", SCENE_GORON_CITY },
+    { "LAGO", SCENE_LAKE_HYLIA },            { "BOSQUE_KOKIRI", SCENE_KOKIRI_FOREST },
+};
+
+static std::string ReboomToken(const std::string& s, size_t& p) {
+    while (p < s.size() && (s[p] == ' ' || s[p] == '\t' || s[p] == '\r')) p++;
+    size_t ini = p;
+    while (p < s.size() && s[p] != ' ' && s[p] != '\t' && s[p] != '\r') p++;
+    return s.substr(ini, p - ini);
+}
+
+// Devuelve la escena donde esta Malon ahora, o -1 si esta en el rancho (de noche siempre -1)
+extern "C" s16 Reboom_MalonLugarHoy(void) {
+    static const char* dias[7] = { "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo" };
+    int hora = (int)(((long)gSaveContext.dayTime * 24) / 0x10000);
+    if (hora < 6 || hora >= 18) return -1;
+    std::string periodo = (hora < 12) ? "manana" : "tarde";
+    int d = gSaveContext.totalDays < 1 ? 1 : gSaveContext.totalDays;
+    std::string dia = dias[(d - 1) % 7];
+    std::ifstream f("/sdcard/Download/Hyrule/Characters/Malon/itinerario.txt");
+    std::string linea;
+    while (std::getline(f, linea)) {
+        if (linea.empty() || linea[0] == '#') continue;
+        size_t p = 0;
+        std::string a = ReboomToken(linea, p), b = ReboomToken(linea, p), c = ReboomToken(linea, p);
+        if (a == dia && b == periodo) {
+            for (const auto& l : sReboomLugares) {
+                if (c == l.nombre) return (l.scene == SCENE_LON_LON_RANCH) ? -1 : l.scene;
+            }
+            return -1;
+        }
+    }
+    return -1;
+}
+
+extern "C" s32 Object_Spawn(ObjectContext* objectCtx, s16 objectId);
+
+// Al cargar una zona: si a Malon le toca estar aqui, aparece cerca de la entrada
+static void Reboom_SpawnMalonViajera() {
+    PlayState* play = gPlayState;
+    if (play == nullptr || !LINK_IS_CHILD || play->linkActorEntry == nullptr) return;
+    if (!Flags_GetEventChkInf(EVENTCHKINF_TALON_RETURNED_FROM_CASTLE)) return;
+    s16 lugar = Reboom_MalonLugarHoy();
+    if (lugar < 0 || play->sceneNum != lugar) return;
+    if (Object_GetIndex(&play->objectCtx, OBJECT_MA1) < 0) {
+        Object_Spawn(&play->objectCtx, OBJECT_MA1);
+    }
+    ActorEntry* e = play->linkActorEntry;
+    s16 rotY = e->rot.y;
+    f32 x = e->pos.x + Math_SinS(rotY) * 90.0f;
+    f32 zz = e->pos.z + Math_CosS(rotY) * 90.0f;
+    Actor_Spawn(&play->actorCtx, play, ACTOR_EN_MA1, x, (f32)e->pos.y, zz, 0, (s16)(rotY + 0x8000), 7, 0, 0);
+}
+
 extern "C" void InitOTR() {
 
 #ifdef __SWITCH__
@@ -1253,6 +1313,7 @@ extern "C" void InitOTR() {
     CVarClear(CVAR_GENERAL("RandomizerDroppedFile"));
     // #endregion
     GameInteractor::Instance->RegisterGameHook<GameInteractor::OnFileDropped>(SoH_ProcessDroppedFiles);
+    GameInteractor::Instance->RegisterGameHook<GameInteractor::OnSceneSpawnActors>(Reboom_SpawnMalonViajera);
 
     RegisterImGuiItemIcons();
 

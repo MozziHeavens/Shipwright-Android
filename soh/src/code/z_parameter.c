@@ -5140,9 +5140,11 @@ void Interface_DrawReboomClock(PlayState* play) {
         GfxPrint_Init(&printer);
         GfxPrint_Open(&printer, OVERLAY_DISP);
         GfxPrint_SetColor(&printer, 255, 220, 80, alpha);
+        const char* nombreDia = sDias[(day - 1) % 7];
         GfxPrint_SetPosPx(&printer, x, y + 18);
-        GfxPrint_Printf(&printer, "%s ", sDias[(day - 1) % 7]);
+        GfxPrint_Printf(&printer, "%s", nombreDia);
         GfxPrint_SetColor(&printer, esDia ? 255 : 150, esDia ? 255 : 200, 255, alpha);
+        GfxPrint_SetPosPx(&printer, x + ((s32)strlen(nombreDia) + 1) * 8, y + 18);
         GfxPrint_Printf(&printer, "%s", periodo);
         OVERLAY_DISP = GfxPrint_Close(&printer);
         GfxPrint_Destroy(&printer);

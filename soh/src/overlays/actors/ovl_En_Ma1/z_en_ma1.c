@@ -15,6 +15,8 @@
 #include "soh/OTRGlobals.h"
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 
+s16 Reboom_MalonLugarHoy(void); // ReBoom: itinerario (OTRGlobals.cpp)
+
 #define FLAGS                                                                                  \
     (ACTOR_FLAG_ATTENTION_ENABLED | ACTOR_FLAG_FRIENDLY | ACTOR_FLAG_UPDATE_CULLING_DISABLED | \
      ACTOR_FLAG_DRAW_CULLING_DISABLED | ACTOR_FLAG_UPDATE_DURING_OCARINA)
@@ -244,6 +246,15 @@ s32 func_80AA08C4(EnMa1* this, PlayState* play) {
     bool malonReturnedFromCastle = GameInteractor_Should(VB_MALON_RETURN_FROM_CASTLE,
                                                          Flags_GetEventChkInf(EVENTCHKINF_TALON_RETURNED_FROM_CASTLE));
 
+    // ReBoom: Malon viajera (aparece por su itinerario, marcada con rot.z == 7)
+    if (this->actor.shape.rot.z == 7) {
+        return LINK_IS_CHILD && malonReturnedFromCastle;
+    }
+    // ReBoom: si su itinerario dice que ahora esta en otro lugar, no aparece en el rancho
+    if (LINK_IS_CHILD && malonReturnedFromCastle && (Reboom_MalonLugarHoy() >= 0) &&
+        ((play->sceneNum == SCENE_LON_LON_RANCH) || (play->sceneNum == SCENE_LON_LON_BUILDINGS))) {
+        return 0;
+    }
     if ((this->actor.shape.rot.z == 3) && (gSaveContext.sceneSetupIndex == 5)) {
         return 1;
     }
