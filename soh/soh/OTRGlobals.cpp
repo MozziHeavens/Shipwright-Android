@@ -2166,6 +2166,33 @@ CustomMessage Randomizer_GetCustomGetItemMessage(Player* player) {
     return getItemText;
 }
 
+// ReBoom: nombres de objetos para la IA (ids fijos de Ocarina of Time)
+static const char* ReboomItemName(int id) {
+    switch (id) {
+        case 0x00: return "Palos Deku"; case 0x01: return "Nueces Deku"; case 0x02: return "Bombas";
+        case 0x03: return "Arco de las Hadas"; case 0x06: return "Resortera"; case 0x07: return "Ocarina de las Hadas";
+        case 0x08: return "Ocarina del Tiempo"; case 0x09: return "Bombchus"; case 0x0A: return "Gancho";
+        case 0x0B: return "Gancho largo"; case 0x0E: return "Bumeran"; case 0x0F: return "Lente de la Verdad";
+        case 0x10: return "Frijoles magicos"; case 0x11: return "Martillo Megaton";
+        case 0x14: return "Botella vacia"; case 0x15: return "Pocion roja en botella";
+        case 0x16: return "Pocion verde en botella"; case 0x17: return "Pocion azul en botella";
+        case 0x18: return "Hada en botella"; case 0x19: return "Pez en botella";
+        case 0x1A: case 0x1F: return "Leche Lon Lon en botella"; case 0x1B: return "Carta de Ruto en botella";
+        case 0x1C: return "Fuego azul en botella"; case 0x1D: return "Bichos en botella";
+        case 0x1E: case 0x20: return "Poe en botella";
+        case 0x21: return "Huevo raro"; case 0x22: return "Cuco"; case 0x23: return "Carta de Zelda";
+        case 0x24: return "Mascara Keaton"; case 0x25: return "Mascara de Calavera";
+        case 0x26: return "Mascara Espeluznante"; case 0x27: return "Capucha de Conejo";
+        case 0x28: return "Mascara Goron"; case 0x29: return "Mascara Zora"; case 0x2A: return "Mascara Gerudo";
+        case 0x2B: return "Mascara de la Verdad"; case 0x2D: return "Huevo de bolsillo";
+        case 0x2E: return "Cuco de bolsillo"; case 0x2F: return "Cojiro"; case 0x30: return "Hongo raro";
+        case 0x31: return "Pocion rara"; case 0x32: return "Sierra del cazador"; case 0x33: return "Espada Goron rota";
+        case 0x34: return "Receta medica"; case 0x35: return "Rana de ojos grandes"; case 0x36: return "Gotas para ojos";
+        case 0x37: return "Recibo de reclamo";
+        default: return nullptr;
+    }
+}
+
 // ReBoom: estado de preguntas personalizadas
 extern "C" u16 gReboomPendingQuestion = 0;
 extern "C" u8 gReboomAnswerMode = 0;
@@ -2547,6 +2574,20 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 promptFile << "player_rupees=" << gSaveContext.rupees << std::endl;
                 promptFile << "has_sword=" << ((gSaveContext.inventory.equipment & 0xF) ? 1 : 0) << std::endl;
                 promptFile << "has_ocarina=" << (INV_CONTENT(ITEM_OCARINA_FAIRY) != ITEM_NONE || INV_CONTENT(ITEM_OCARINA_TIME) != ITEM_NONE ? 1 : 0) << std::endl;
+                {
+                    std::string objetos;
+                    auto addObj = [&](const char* n) { if (!objetos.empty()) objetos += ", "; objetos += n; };
+                    for (int s = 0; s < 24; s++) {
+                        const char* n = ReboomItemName(gSaveContext.inventory.items[s]);
+                        if (n != nullptr) addObj(n);
+                    }
+                    u32 q = gSaveContext.inventory.questItems;
+                    if (q & (1u << 18)) addObj("Esmeralda Kokiri");
+                    if (q & (1u << 19)) addObj("Rubi Goron");
+                    if (q & (1u << 20)) addObj("Zafiro Zora");
+                    if (q & (1u << 13)) addObj("Cancion de Epona");
+                    promptFile << "objetos=" << objetos << std::endl;
+                }
                 promptFile.close();
             }
         }
@@ -2562,6 +2603,11 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                 char choiceFileName[64];
                 snprintf(choiceFileName, sizeof(choiceFileName), "/0x%X_choice%d.txt", textId, (int)play->msgCtx.choiceIndex);
                 memFile.open(charDir + choiceFileName);
+                if (!memFile.is_open()) {
+                    // Respuestas de preguntas creadas por la IA (memory_choice0/1.txt)
+                    snprintf(choiceFileName, sizeof(choiceFileName), "/memory_choice%d.txt", (int)play->msgCtx.choiceIndex);
+                    memFile.open(charDir + choiceFileName);
+                }
             }
             if (!memFile.is_open() && !modoRespuesta) {
                 char idFileName[64];
