@@ -5145,6 +5145,7 @@ static Gfx* Reboom_FontText(Gfx* gfx, const char* s, s32* px, s32 y, u8 r, u8 g,
     return gfx;
 }
 
+extern u8 gReboomTiempoLento;
 // ReBoom: reloj estilo Majora's Mask (dia en amarillo, icono de reloj y hora)
 void Interface_DrawReboomClock(PlayState* play) {
     InterfaceContext* interfaceCtx = &play->interfaceCtx;
@@ -5191,6 +5192,8 @@ void Interface_DrawReboomClock(PlayState* play) {
                                 G_TX_RENDERTILE, 0, 0, 1 << 10, 1 << 10);
         if (isDay) {
             gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 220, 80, alpha);
+        } else if (gReboomTiempoLento) {
+            gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 150, 255, 150, alpha);
         } else if (esDia) {
             gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, alpha);
         } else {

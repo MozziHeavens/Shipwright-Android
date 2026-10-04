@@ -232,6 +232,35 @@ void Message_HandleChoiceSelection(PlayState* play, u8 numChoices) {
         (numChoices == 1) ? R_TEXT_CHOICE_YPOS(msgCtx->choiceIndex + 1) : R_TEXT_CHOICE_YPOS(msgCtx->choiceIndex);
 }
 
+// ReBoom: canciones de Majora tocadas con la ocarina (requieren la Cancion del Tiempo)
+extern u8 gReboomTiempoLento;
+void Reboom_DobleTiempo(void);
+static u8 sReboomNotas[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
+static void Reboom_RevisarCancion(u8 nota) {
+    // notas: 0 = A, 1 = C abajo, 2 = C derecha, 3 = C izquierda, 4 = C arriba
+    static const u8 invertida[6] = { 1, 0, 2, 1, 0, 2 }; // C abajo, A, C der, C abajo, A, C der
+    static const u8 doble[6] = { 2, 2, 0, 0, 1, 1 };     // C der, C der, A, A, C abajo, C abajo
+    s32 i;
+    for (i = 0; i < 5; i++) {
+        sReboomNotas[i] = sReboomNotas[i + 1];
+    }
+    sReboomNotas[5] = nota;
+    if (!CHECK_QUEST_ITEM(QUEST_SONG_TIME)) {
+        return;
+    }
+    if (memcmp(sReboomNotas, invertida, 6) == 0) {
+        gReboomTiempoLento = !gReboomTiempoLento;
+    } else if (memcmp(sReboomNotas, doble, 6) == 0) {
+        Reboom_DobleTiempo();
+    } else {
+        return;
+    }
+    memset(sReboomNotas, 0xFF, 6);
+    Audio_PlaySoundGeneral(NA_SE_SY_TRE_BOX_APPEAR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
+                           &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+}
+
 void Message_DrawTextChar(PlayState* play, void* textureImage, Gfx** p) {
     MessageContext* msgCtx = &play->msgCtx;
     Gfx* gfx = *p;
@@ -3445,6 +3474,7 @@ void Message_DrawMain(PlayState* play, Gfx** p) {
                             msgCtx->ocarinaStaff->noteIdx;
                         sOcarinaNoteBuf[msgCtx->ocarinaStaff->pos] = OCARINA_NOTE_INVALID;
                         sOcarinaNoteBufPos++;
+                        Reboom_RevisarCancion(msgCtx->ocarinaStaff->noteIdx);
                     }
                 }
                 msgCtx->lastPlayedSong = msgCtx->ocarinaStaff->state;

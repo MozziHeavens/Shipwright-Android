@@ -59,6 +59,31 @@ u8 gSkyboxBlendingEnabled = false;
 
 u16 gTimeIncrement = 0;
 u8 gReboomDawnDone = 0; // ReBoom: evita contar dos veces el amanecer
+u8 gReboomTiempoLento = 0; // ReBoom: Cancion del Tiempo Invertida (1 = el tiempo va 3 veces mas lento)
+
+// ReBoom: Cancion de Doble Tiempo -> salta al inicio del siguiente periodo (06:00, 12:00, 18:00)
+void Reboom_DobleTiempo(void) {
+    s32 hora = ((s32)gSaveContext.dayTime * 24) / 0x10000;
+    if (hora < 6) {
+        gSaveContext.dayTime = 0x4000;
+        if (!gReboomDawnDone) {
+            gSaveContext.totalDays++;
+            gSaveContext.bgsDayCount++;
+            gSaveContext.dogIsLost = true;
+        }
+        gReboomDawnDone = 1;
+    } else if (hora < 12) {
+        gSaveContext.dayTime = 0x8000;
+    } else if (hora < 18) {
+        gSaveContext.dayTime = 0xC000;
+    } else {
+        gSaveContext.dayTime = 0x4000;
+        gSaveContext.totalDays++;
+        gSaveContext.bgsDayCount++;
+        gSaveContext.dogIsLost = true;
+        gReboomDawnDone = 1;
+    }
+}
 
 u16 D_8011FB44 = 0xFFFC;
 
@@ -941,7 +966,7 @@ void Environment_Update(PlayState* play, EnvironmentContext* envCtx, LightContex
                         if (reboomAntes < 0x3000) {
                             gReboomDawnDone = 0;
                         }
-                        sReboomFrac += 119305;
+                        sReboomFrac += gReboomTiempoLento ? 39768 : 119305;
                         gSaveContext.dayTime += (u16)(sReboomFrac >> 16);
                         sReboomFrac &= 0xFFFF;
                         if (reboomAntes < 0x4000 && gSaveContext.dayTime >= 0x4000 && !gReboomDawnDone) {
