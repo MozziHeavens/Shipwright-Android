@@ -1021,6 +1021,22 @@ OcarinaNote sOcarinaSongs[OCARINA_SONG_MAX][20] = {
 };
 
 OcarinaNote* sPlaybackSong = sOcarinaSongs[0];
+
+// ReBoom: escribe una melodia propia (para las canciones de Majora) y la deja lista para sonar
+void Reboom_SetMelody(const u8* notas, const u8* largos, s32 n) {
+    s32 i;
+    for (i = 0; i < n && i < 18; i++) {
+        sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].noteIdx = notas[i];
+        sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].unk_02 = largos[i];
+        sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].volume = 0x54;
+        sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].vibrato = 0;
+        sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].tone = 0;
+    }
+    sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].noteIdx = 0xFF;
+    sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i].unk_02 = 0;
+    sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i + 1].noteIdx = 0xFF;
+    sOcarinaSongs[OCARINA_SONG_MEMORY_GAME][i + 1].unk_02 = 0;
+}
 u8 sFrogsSongNotes[14] = {
     OCARINA_NOTE_D4, OCARINA_NOTE_B4, OCARINA_NOTE_A4, OCARINA_NOTE_F4, OCARINA_NOTE_B4,
     OCARINA_NOTE_A4, OCARINA_NOTE_F4, OCARINA_NOTE_D4, OCARINA_NOTE_F4, OCARINA_NOTE_D4,

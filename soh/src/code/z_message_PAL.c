@@ -237,28 +237,40 @@ extern u8 gReboomTiempoLento;
 void Reboom_DobleTiempo(void);
 static u8 sReboomNotas[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-static void Reboom_RevisarCancion(u8 nota) {
+void Reboom_SetMelody(const u8* notas, const u8* largos, s32 n);
+static s16 sReboomCerrar = 0;
+
+static s32 Reboom_RevisarCancion(u8 nota) {
     // notas: 0 = A, 1 = C abajo, 2 = C derecha, 3 = C izquierda, 4 = C arriba
     static const u8 invertida[6] = { 1, 0, 2, 1, 0, 2 }; // C abajo, A, C der, C abajo, A, C der
     static const u8 doble[6] = { 2, 2, 0, 0, 1, 1 };     // C der, C der, A, A, C abajo, C abajo
+    // tonos de la ocarina: A = 2, C abajo = 5, C derecha = 9
+    static const u8 tonoInv[6] = { 5, 2, 9, 5, 2, 9 };
+    static const u8 largoInv[6] = { 32, 65, 33, 32, 65, 99 };
+    static const u8 tonoDob[6] = { 9, 9, 2, 2, 5, 5 };
+    static const u8 largoDob[6] = { 16, 16, 32, 32, 16, 64 };
     s32 i;
     for (i = 0; i < 5; i++) {
         sReboomNotas[i] = sReboomNotas[i + 1];
     }
     sReboomNotas[5] = nota;
     if (!CHECK_QUEST_ITEM(QUEST_SONG_TIME)) {
-        return;
+        return 0;
     }
     if (memcmp(sReboomNotas, invertida, 6) == 0) {
         gReboomTiempoLento = !gReboomTiempoLento;
+        Reboom_SetMelody(tonoInv, largoInv, 6);
     } else if (memcmp(sReboomNotas, doble, 6) == 0) {
         Reboom_DobleTiempo();
+        Reboom_SetMelody(tonoDob, largoDob, 6);
     } else {
-        return;
+        return 0;
     }
     memset(sReboomNotas, 0xFF, 6);
     Audio_PlaySoundGeneral(NA_SE_SY_TRE_BOX_APPEAR, &gSfxDefaultPos, 4, &gSfxDefaultFreqAndVolScale,
                            &gSfxDefaultFreqAndVolScale, &gSfxDefaultReverb);
+    Audio_OcaSetSongPlayback(OCARINA_SONG_MEMORY_GAME + 1, 1);
+    return 1;
 }
 
 void Message_DrawTextChar(PlayState* play, void* textureImage, Gfx** p) {
@@ -3463,6 +3475,16 @@ void Message_DrawMain(PlayState* play, Gfx** p) {
                 }
                 break;
             case MSGMODE_OCARINA_PLAYING:
+                if (sReboomCerrar > 0) {
+                    // ReBoom: dejar que suene la melodia de Majora y luego guardar la ocarina
+                    sReboomCerrar--;
+                    if (sReboomCerrar == 0) {
+                        Audio_OcaSetInstrument(0);
+                        play->msgCtx.ocarinaMode = OCARINA_MODE_04;
+                        Message_CloseTextbox(play);
+                        break;
+                    }
+                }
                 msgCtx->ocarinaStaff = Audio_OcaGetPlayingStaff();
                 if (msgCtx->ocarinaStaff->pos) {
                     osSyncPrintf("locate=%d  onpu_pt=%d\n", msgCtx->ocarinaStaff->pos, sOcarinaNoteBufPos);
@@ -3474,7 +3496,9 @@ void Message_DrawMain(PlayState* play, Gfx** p) {
                             msgCtx->ocarinaStaff->noteIdx;
                         sOcarinaNoteBuf[msgCtx->ocarinaStaff->pos] = OCARINA_NOTE_INVALID;
                         sOcarinaNoteBufPos++;
-                        Reboom_RevisarCancion(msgCtx->ocarinaStaff->noteIdx);
+                        if (sReboomCerrar == 0 && Reboom_RevisarCancion(msgCtx->ocarinaStaff->noteIdx)) {
+                            sReboomCerrar = 70;
+                        }
                     }
                 }
                 msgCtx->lastPlayedSong = msgCtx->ocarinaStaff->state;
