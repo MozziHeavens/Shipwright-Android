@@ -5133,6 +5133,20 @@ void Interface_DrawReboomClock(PlayState* play) {
     gDPSetEnvColor(OVERLAY_DISP++, 0, 0, 0, 0);
     OVERLAY_DISP = Gfx_TextureIA8(OVERLAY_DISP, gClockIconTex, 16, 16, x + nd * 8 + 4, y, 16, 16, 1 << 10, 1 << 10);
     gDPPipeSync(OVERLAY_DISP++);
+    {
+        static const char* sDias[7] = { "LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO", "DOMINGO" };
+        const char* periodo = (hh >= 6 && hh < 12) ? "MANANA" : ((hh >= 12 && hh < 18) ? "TARDE" : "NOCHE");
+        GfxPrint printer;
+        GfxPrint_Init(&printer);
+        GfxPrint_Open(&printer, OVERLAY_DISP);
+        GfxPrint_SetColor(&printer, 255, 220, 80, alpha);
+        GfxPrint_SetPosPx(&printer, x, y + 18);
+        GfxPrint_Printf(&printer, "%s ", sDias[(day - 1) % 7]);
+        GfxPrint_SetColor(&printer, esDia ? 255 : 150, esDia ? 255 : 200, 255, alpha);
+        GfxPrint_Printf(&printer, "%s", periodo);
+        OVERLAY_DISP = GfxPrint_Close(&printer);
+        GfxPrint_Destroy(&printer);
+    }
     CLOSE_DISPS(play->state.gfxCtx);
 }
 

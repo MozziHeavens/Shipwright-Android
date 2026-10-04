@@ -58,6 +58,7 @@ u8 D_8011FB38 = 0;
 u8 gSkyboxBlendingEnabled = false;
 
 u16 gTimeIncrement = 0;
+u8 gReboomDawnDone = 0; // ReBoom: evita contar dos veces el amanecer
 
 u16 D_8011FB44 = 0xFFFC;
 
@@ -926,10 +927,30 @@ void Environment_Update(PlayState* play, EnvironmentContext* envCtx, LightContex
                 if ((envCtx->unk_1A == 0) && !FrameAdvance_IsEnabled(play) &&
                     (play->transitionMode == TRANS_MODE_OFF || ((void)0, gSaveContext.gameMode) != GAMEMODE_NORMAL)) {
 
-                    if (IS_DAY || gTimeIncrement >= 0x190) {
-                        gSaveContext.dayTime += gTimeIncrement;
+                    if (gTimeIncrement >= 0x190 || play->csCtx.state != 0) {
+                        // ReBoom: saltos de tiempo y cinematicas usan la velocidad original
+                        if (IS_DAY || gTimeIncrement >= 0x190) {
+                            gSaveContext.dayTime += gTimeIncrement;
+                        } else {
+                            gSaveContext.dayTime += gTimeIncrement * 2;
+                        }
                     } else {
-                        gSaveContext.dayTime += gTimeIncrement * 2; // time moves twice as fast at night
+                        // ReBoom: el tiempo corre en todas partes; 1 dia completo = 30 minutos reales
+                        static u32 sReboomFrac = 0;
+                        u16 reboomAntes = gSaveContext.dayTime;
+                        if (reboomAntes < 0x3000) {
+                            gReboomDawnDone = 0;
+                        }
+                        sReboomFrac += 119305;
+                        gSaveContext.dayTime += (u16)(sReboomFrac >> 16);
+                        sReboomFrac &= 0xFFFF;
+                        if (reboomAntes < 0x4000 && gSaveContext.dayTime >= 0x4000 && !gReboomDawnDone) {
+                            // Amanecer a las 06:00: nuevo dia en cualquier lugar
+                            gSaveContext.totalDays++;
+                            gSaveContext.bgsDayCount++;
+                            gSaveContext.dogIsLost = true;
+                            gReboomDawnDone = 1;
+                        }
                     }
                 }
             }
@@ -2090,8 +2111,11 @@ void func_80075B44(PlayState* play) {
             break;
         case 6:
             if ((gSaveContext.dayTime < 0xCAAC) && (gSaveContext.dayTime > 0x4555)) {
-                gSaveContext.totalDays++;
-                gSaveContext.bgsDayCount++;
+                if (!gReboomDawnDone) {
+                    gSaveContext.totalDays++;
+                    gSaveContext.bgsDayCount++;
+                    gReboomDawnDone = 1;
+                }
                 gSaveContext.dogIsLost = true;
                 Sfx_PlaySfxCentered(NA_SE_EV_CHICKEN_CRY_M);
                 if ((Inventory_ReplaceItem(play, ITEM_WEIRD_EGG, ITEM_CHICKEN) || Inventory_HatchPocketCucco(play)) &&

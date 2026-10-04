@@ -2619,6 +2619,14 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
                     if (q & (1u << 5)) addObj("Medallon de la Luz");
                     promptFile << "objetos=" << objetos << std::endl;
                     promptFile << "edad=" << (gSaveContext.linkAge == 0 ? "adulto" : "nino") << std::endl;
+                    {
+                        static const char* dias[7] = { "lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo" };
+                        int hora = (int)(((long)gSaveContext.dayTime * 24) / 0x10000);
+                        int d = gSaveContext.totalDays < 1 ? 1 : gSaveContext.totalDays;
+                        promptFile << "hora=" << hora << std::endl;
+                        promptFile << "dia_semana=" << dias[(d - 1) % 7] << std::endl;
+                        promptFile << "periodo=" << ((hora >= 6 && hora < 12) ? "manana" : ((hora >= 12 && hora < 18) ? "tarde" : "noche")) << std::endl;
+                    }
                 }
                 promptFile.close();
             }
