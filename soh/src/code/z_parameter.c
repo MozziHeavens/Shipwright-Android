@@ -5073,6 +5073,68 @@ const char* digitTextures[] = { gCounterDigit0Tex, gCounterDigit1Tex, gCounterDi
                                 gCounterDigit2Tex, gCounterDigit3Tex, gCounterDigit4Tex, gCounterDigit5Tex,
                                 gCounterDigit6Tex, gCounterDigit7Tex, gCounterDigit8Tex };
 
+// ReBoom: reloj estilo Majora's Mask (dia en amarillo, icono de reloj y hora)
+void Interface_DrawReboomClock(PlayState* play) {
+    InterfaceContext* interfaceCtx = &play->interfaceCtx;
+    if (play->pauseCtx.state != 0 || play->msgCtx.msgMode != MSGMODE_NONE || interfaceCtx->magicAlpha <= 0) {
+        return;
+    }
+    u8 alpha = (u8)interfaceCtx->magicAlpha;
+    s32 mins = ((s32)gSaveContext.dayTime * 1440) / 0x10000;
+    s32 hh = mins / 60;
+    s32 mm = mins % 60;
+    s32 esDia = (gSaveContext.dayTime >= 0x4555) && (gSaveContext.dayTime < 0xC001);
+    s32 day = gSaveContext.totalDays;
+    if (day < 1) day = 1;
+    if (day > 999) day = 999;
+    s32 dd[3];
+    s32 nd = 0;
+    if (day >= 100) dd[nd++] = day / 100;
+    if (day >= 10) dd[nd++] = (day / 10) % 10;
+    dd[nd++] = day % 10;
+    s32 tg[5] = { hh / 10, hh % 10, 10, mm / 10, mm % 10 };
+    s32 totalW = nd * 8 + 24 + 5 * 8;
+    s32 x = (SCREEN_WIDTH - totalW) / 2;
+    s32 y = 212;
+    s32 i;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gDPPipeSync(OVERLAY_DISP++);
+    gDPSetCombineLERP(OVERLAY_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, PRIMITIVE, TEXEL0, 0,
+                      PRIMITIVE, 0);
+    gDPSetOtherMode(OVERLAY_DISP++,
+                    G_AD_DISABLE | G_CD_DISABLE | G_CK_NONE | G_TC_FILT | G_TF_BILERP | G_TT_IA16 | G_TL_TILE |
+                        G_TD_CLAMP | G_TP_NONE | G_CYC_1CYCLE | G_PM_NPRIMITIVE,
+                    G_AC_NONE | G_ZS_PRIM | G_RM_XLU_SURF | G_RM_XLU_SURF2);
+    for (i = 0; i < nd + 5; i++) {
+        s32 isDay = (i < nd);
+        s32 tex = isDay ? dd[i] : tg[i - nd];
+        s32 px = isDay ? (x + i * 8) : (x + nd * 8 + 24 + (i - nd) * 8);
+        gDPLoadTextureBlock(OVERLAY_DISP++, ((u8*)digitTextures[tex]), G_IM_FMT_I, G_IM_SIZ_8b, 8, 16, 0,
+                            G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMIRROR | G_TX_WRAP, G_TX_NOMASK, G_TX_NOMASK,
+                            G_TX_NOLOD, G_TX_NOLOD);
+        gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 0, 0, 0, alpha);
+        gSPWideTextureRectangle(OVERLAY_DISP++, (px + 1) << 2, (y + 1) << 2, (px + 9) << 2, (y + 17) << 2,
+                                G_TX_RENDERTILE, 0, 0, 1 << 10, 1 << 10);
+        if (isDay) {
+            gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 220, 80, alpha);
+        } else if (esDia) {
+            gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, alpha);
+        } else {
+            gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 150, 200, 255, alpha);
+        }
+        gSPWideTextureRectangle(OVERLAY_DISP++, px << 2, y << 2, (px + 8) << 2, (y + 16) << 2, G_TX_RENDERTILE, 0,
+                                0, 1 << 10, 1 << 10);
+    }
+    gDPPipeSync(OVERLAY_DISP++);
+    gDPSetCombineMode(OVERLAY_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
+    gDPSetPrimColor(OVERLAY_DISP++, 0, 0, 255, 255, 255, alpha);
+    gDPSetEnvColor(OVERLAY_DISP++, 0, 0, 0, 0);
+    OVERLAY_DISP = Gfx_TextureIA8(OVERLAY_DISP, gClockIconTex, 16, 16, x + nd * 8 + 4, y, 16, 16, 1 << 10, 1 << 10);
+    gDPPipeSync(OVERLAY_DISP++);
+    CLOSE_DISPS(play->state.gfxCtx);
+}
+
 void Interface_Draw(PlayState* play) {
     static s16 magicArrowEffectsR[] = { 255, 100, 255 };
     static s16 magicArrowEffectsG[] = { 0, 100, 255 };
@@ -6354,6 +6416,8 @@ void Interface_Draw(PlayState* play) {
             }
         }
     }
+
+    Interface_DrawReboomClock(play);
 
     if (pauseCtx->debugState == 3) {
         FlagSet_Update(play);
