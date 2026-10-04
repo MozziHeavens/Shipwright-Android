@@ -2701,6 +2701,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             gReboomPendingQuestion = 0;
             if (modoRespuesta) {
                 // Respuesta segun lo que eligio el jugador
+                { std::ofstream dbg("/sdcard/Download/Hyrule/Characters/reboom_debug.txt", std::ios::app); dbg << "RESPUESTA textId=" << std::hex << textId << std::dec << " choiceIndex=" << (int)play->msgCtx.choiceIndex << std::endl; }
                 char choiceFileName[64];
                 snprintf(choiceFileName, sizeof(choiceFileName), "/0x%X_choice%d.txt", textId, (int)play->msgCtx.choiceIndex);
                 memFile.open(charDir + choiceFileName);
@@ -2743,6 +2744,7 @@ extern "C" int CustomMessage_RetrieveIfExists(PlayState* play) {
             }
         }
 
+        { std::ofstream dbg("/sdcard/Download/Hyrule/Characters/reboom_debug.txt", std::ios::app); dbg << "  lineas=" << lines.size() << " texto_vacio=" << (int)txt.empty() << std::endl; }
         // Solo reemplazar si existe archivo del personaje.
         // Si no hay archivo, se queda el texto original (es_patch.otr).
         if (!txt.empty()) {

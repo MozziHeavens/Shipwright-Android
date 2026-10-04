@@ -16,6 +16,7 @@
 #include "soh/Enhancements/game-interactor/GameInteractor_Hooks.h"
 
 s16 Reboom_MalonLugarHoy(void); // ReBoom: itinerario (OTRGlobals.cpp)
+extern u16 gReboomPendingQuestion;
 
 #define FLAGS                                                                                  \
     (ACTOR_FLAG_ATTENTION_ENABLED | ACTOR_FLAG_FRIENDLY | ACTOR_FLAG_UPDATE_CULLING_DISABLED | \
@@ -221,7 +222,8 @@ s16 func_80AA0778(PlayState* play, Actor* thisx) {
             break;
         case TEXT_STATE_CHOICE:
         case TEXT_STATE_EVENT:
-            if (Message_ShouldAdvance(play)) {
+            // ReBoom: respuesta de pregunta de la IA -> no cerrar la charla desde el actor
+            if (!(gReboomPendingQuestion != 0 && gReboomPendingQuestion == play->msgCtx.textId) && Message_ShouldAdvance(play)) {
                 ret = NPC_TALK_STATE_ACTION;
             }
             break;
