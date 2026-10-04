@@ -5105,6 +5105,11 @@ static const struct { u8 c; u8 w; const char* tex; } sReboomFont[] = {
     { 0x9B, 9, "__OTR__textures/nes_font_static/gMsgChar9BLatinSmallLetterOWithDiaeresisTex" },
 };
 
+#include <stdio.h>
+// Igual que Font_LoadChar: copiar la ruta de la letra a un espacio alineado
+static char sReboomFontBuf[ARRAY_COUNT(sReboomFont)][128] __attribute__((aligned(8)));
+static u8 sReboomFontOk[ARRAY_COUNT(sReboomFont)];
+
 static Gfx* Reboom_FontText(Gfx* gfx, const char* s, s32* px, s32 y, u8 r, u8 g, u8 b, u8 a) {
     for (; *s != '\0'; s++) {
         u8 c = (u8)*s;
@@ -5122,7 +5127,12 @@ static Gfx* Reboom_FontText(Gfx* gfx, const char* s, s32* px, s32 y, u8 r, u8 g,
             *px += 6;
             continue;
         }
-        gDPLoadTextureBlock_4b(gfx++, (void*)tex, G_IM_FMT_I, 16, 16, 0, G_TX_NOMIRROR | G_TX_CLAMP,
+        if (!sReboomFontOk[i]) {
+            memcpy(sReboomFontBuf[i], tex, strlen(tex) + 1);
+            sReboomFontOk[i] = 1;
+        }
+        gDPPipeSync(gfx++);
+        gDPLoadTextureBlock_4b(gfx++, sReboomFontBuf[i], G_IM_FMT_I, 16, 16, 0, G_TX_NOMIRROR | G_TX_CLAMP,
                                G_TX_NOMIRROR | G_TX_CLAMP, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD);
         gDPSetPrimColor(gfx++, 0, 0, 0, 0, 0, a);
         gSPWideTextureRectangle(gfx++, (*px + 1) << 2, (y + 1) << 2, (*px + 13) << 2, (y + 13) << 2,
@@ -5197,16 +5207,24 @@ void Interface_DrawReboomClock(PlayState* play) {
     gDPPipeSync(OVERLAY_DISP++);
     {
         // ReBoom: dia de la semana y periodo con la fuente del juego
+        static s8 sSinTexto = -1;
+        if (sSinTexto < 0) {
+            FILE* f = fopen("/sdcard/Download/Hyrule/reloj_sin_texto.txt", "r");
+            sSinTexto = (f != NULL) ? 1 : 0;
+            if (f != NULL) fclose(f);
+        }
         static const char* sDias[7] = { "Lunes", "Martes", "Mi\x96rcoles", "Jueves", "Viernes", "S\x91" "bado", "Domingo" };
         const char* periodo = (hh >= 6 && hh < 12) ? "Ma\x9b" "ana" : ((hh >= 12 && hh < 18) ? "Tarde" : "Noche");
         s32 lx = (x < 4) ? 4 : x;
         gDPPipeSync(OVERLAY_DISP++);
         gDPSetCombineLERP(OVERLAY_DISP++, 0, 0, 0, PRIMITIVE, TEXEL0, 0, PRIMITIVE, 0, 0, 0, 0, PRIMITIVE, TEXEL0, 0,
                           PRIMITIVE, 0);
-        OVERLAY_DISP = Reboom_FontText(OVERLAY_DISP, sDias[(day - 1) % 7], &lx, y + 17, 255, 220, 80, alpha);
+        if (!sSinTexto) {
+            OVERLAY_DISP = Reboom_FontText(OVERLAY_DISP, sDias[(day - 1) % 7], &lx, y + 17, 255, 220, 80, alpha);
         lx += 5;
         OVERLAY_DISP = Reboom_FontText(OVERLAY_DISP, periodo, &lx, y + 17, esDia ? 255 : 150, esDia ? 255 : 200, 255,
                                        alpha);
+        }
         gDPPipeSync(OVERLAY_DISP++);
     }
     CLOSE_DISPS(play->state.gfxCtx);
