@@ -5094,8 +5094,9 @@ void Interface_DrawReboomClock(PlayState* play) {
     dd[nd++] = day % 10;
     s32 tg[5] = { hh / 10, hh % 10, 10, mm / 10, mm % 10 };
     s32 totalW = nd * 8 + 24 + 5 * 8;
-    s32 x = (SCREEN_WIDTH - totalW) / 2;
-    s32 y = 212;
+    s32 x = OTRGetRectDimensionFromLeftEdge(26);
+    s32 y = 44 + ((gSaveContext.magicLevel != 0) ? 16 : 0);
+    (void)totalW;
     s32 i;
 
     OPEN_DISPS(play->state.gfxCtx);
