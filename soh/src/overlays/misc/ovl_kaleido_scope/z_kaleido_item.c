@@ -321,7 +321,39 @@ void KaleidoScope_HandleItemCycleExtras(PlayState* play, u8 slot, bool canCycle,
     }
 }
 
+#include <stdio.h>
+// ReBoom: orden del selector de mascaras (Ocarina + Majora)
+static const u8 sReboomMaskOrder[] = { ITEM_MASK_KEATON, ITEM_MASK_SKULL, ITEM_MASK_SPOOKY, ITEM_MASK_BUNNY,
+                                       ITEM_MASK_GORON,  ITEM_MASK_ZORA,  ITEM_MASK_GERUDO, ITEM_MASK_TRUTH,
+                                       ITEM_MASK_STONE,  ITEM_MASK_KAMARO, ITEM_MASK_GREAT_FAIRY, ITEM_MASK_FIERCE_DEITY };
+static s32 Reboom_MaskIndex(u8 item) {
+    for (s32 i = 0; i < (s32)ARRAY_COUNT(sReboomMaskOrder); i++) {
+        if (sReboomMaskOrder[i] == item) return i;
+    }
+    return -1;
+}
+static u8 Reboom_MaskPrev(u8 item) {
+    s32 i = Reboom_MaskIndex(item);
+    return (i <= 0) ? sReboomMaskOrder[ARRAY_COUNT(sReboomMaskOrder) - 1] : sReboomMaskOrder[i - 1];
+}
+static u8 Reboom_MaskNext(u8 item) {
+    s32 i = Reboom_MaskIndex(item);
+    return (i < 0 || i >= (s32)ARRAY_COUNT(sReboomMaskOrder) - 1) ? sReboomMaskOrder[0] : sReboomMaskOrder[i + 1];
+}
+static s32 Reboom_MascarasLibres(void) {
+    static s8 sLibres = -1;
+    if (sLibres < 0) {
+        FILE* f = fopen("/sdcard/Download/Hyrule/mascaras_mm_libres.txt", "r");
+        sLibres = (f != NULL) ? 1 : 0;
+        if (f != NULL) fclose(f);
+    }
+    return sLibres;
+}
+
 bool CanMaskSelect() {
+    if (Reboom_MascarasLibres() && (Reboom_MaskIndex(INV_CONTENT(ITEM_TRADE_CHILD)) >= 0)) {
+        return true; // ReBoom: modo de prueba con todas las mascaras
+    }
     if (IS_RANDO) {
         return CVarGetInteger(CVAR_ENHANCEMENT("MaskSelect"), 0) &&
                Flags_GetRandomizerInf(
@@ -344,13 +376,9 @@ void KaleidoScope_HandleItemCycles(PlayState* play) {
     KaleidoScope_HandleItemCycleExtras(
         play, SLOT_TRADE_CHILD, CanMaskSelect(),
         IS_RANDO ? Randomizer_GetPrevChildTradeItem()
-                 : (INV_CONTENT(ITEM_TRADE_CHILD) <= ITEM_MASK_KEATON || INV_CONTENT(ITEM_TRADE_CHILD) > ITEM_MASK_TRUTH
-                        ? ITEM_MASK_TRUTH
-                        : INV_CONTENT(ITEM_TRADE_CHILD) - 1),
+                 : Reboom_MaskPrev(INV_CONTENT(ITEM_TRADE_CHILD)),
         IS_RANDO ? Randomizer_GetNextChildTradeItem()
-                 : (INV_CONTENT(ITEM_TRADE_CHILD) >= ITEM_MASK_TRUTH || INV_CONTENT(ITEM_TRADE_CHILD) < ITEM_MASK_KEATON
-                        ? ITEM_MASK_KEATON
-                        : INV_CONTENT(ITEM_TRADE_CHILD) + 1),
+                 : Reboom_MaskNext(INV_CONTENT(ITEM_TRADE_CHILD)),
         true);
 
     // the slot age requirement for the child trade slot has to be updated
@@ -381,13 +409,9 @@ void KaleidoScope_DrawItemCycles(PlayState* play) {
     KaleidoScope_DrawItemCycleExtras(
         play, SLOT_TRADE_CHILD, CanMaskSelect(),
         IS_RANDO ? Randomizer_GetPrevChildTradeItem()
-                 : (INV_CONTENT(ITEM_TRADE_CHILD) <= ITEM_MASK_KEATON || INV_CONTENT(ITEM_TRADE_CHILD) > ITEM_MASK_TRUTH
-                        ? ITEM_MASK_TRUTH
-                        : INV_CONTENT(ITEM_TRADE_CHILD) - 1),
+                 : Reboom_MaskPrev(INV_CONTENT(ITEM_TRADE_CHILD)),
         IS_RANDO ? Randomizer_GetNextChildTradeItem()
-                 : (INV_CONTENT(ITEM_TRADE_CHILD) >= ITEM_MASK_TRUTH || INV_CONTENT(ITEM_TRADE_CHILD) < ITEM_MASK_KEATON
-                        ? ITEM_MASK_KEATON
-                        : INV_CONTENT(ITEM_TRADE_CHILD) + 1));
+                 : Reboom_MaskNext(INV_CONTENT(ITEM_TRADE_CHILD)));
 
     // draw the adult trade select
     KaleidoScope_DrawItemCycleExtras(play, SLOT_TRADE_ADULT,

@@ -36,6 +36,12 @@ u16 gUpgradeCapacities[][4] = {
 u32 gGsFlagsMasks[] = { 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000 };
 u32 gGsFlagsShifts[] = { 0, 8, 16, 24 };
 
+// ReBoom: iconos de las mascaras de Majora
+static const char sReboomIconStone[] __attribute__((aligned(8))) = "__OTR__textures/reboom/gReboomIconStoneMaskTex";
+static const char sReboomIconKamaro[] __attribute__((aligned(8))) = "__OTR__textures/reboom/gReboomIconKamaroMaskTex";
+static const char sReboomIconGreatFairy[] __attribute__((aligned(8))) = "__OTR__textures/reboom/gReboomIconGreatFairyMaskTex";
+static const char sReboomIconFierceDeity[] __attribute__((aligned(8))) = "__OTR__textures/reboom/gReboomIconFierceDeityMaskTex";
+
 void* gItemIcons[] = {
     gItemIconDekuStickTex,
     gItemIconDekuNutTex,
@@ -167,6 +173,36 @@ void* gItemIcons[] = {
     gOcarinaBtnIconCLeftTex,
     gOcarinaBtnIconCRightTex,
     gOcarinaBtnIconATex,
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    gItemIconSoldOutTex, // ReBoom: relleno 0x82-0x9B
+    (void*)sReboomIconStone,       // ITEM_MASK_STONE
+    (void*)sReboomIconKamaro,      // ITEM_MASK_KAMARO
+    (void*)sReboomIconGreatFairy,  // ITEM_MASK_GREAT_FAIRY
+    (void*)sReboomIconFierceDeity, // ITEM_MASK_FIERCE_DEITY
 };
 
 // Used to map item IDs to inventory slots

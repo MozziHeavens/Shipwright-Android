@@ -2250,6 +2250,8 @@ s8 Player_ItemToItemAction(s32 item) {
         return PLAYER_IA_NONE;
     } else if (item == ITEM_LAST_USED) {
         return PLAYER_IA_SWORD_CS;
+    } else if ((item >= ITEM_MASK_STONE) && (item <= ITEM_MASK_FIERCE_DEITY)) {
+        return PLAYER_IA_MASK_KEATON; // ReBoom: las mascaras de Majora usan la accion de mascara
     } else if (item == ITEM_FISHING_POLE) {
         return PLAYER_IA_FISHING_POLE;
     } else {
@@ -2519,7 +2521,8 @@ void Player_ProcessItemButtons(Player* this, PlayState* play) {
     s32 i;
 
     if (this->currentMask != PLAYER_MASK_NONE && !CVarGetInteger(CVAR_ENHANCEMENT("PersistentMasks"), 0)) {
-        maskItemAction = this->currentMask - 1 + PLAYER_IA_MASK_KEATON;
+        maskItemAction = (this->currentMask >= PLAYER_MASK_MM_MIN) ? PLAYER_IA_MASK_KEATON
+                                                                   : this->currentMask - 1 + PLAYER_IA_MASK_KEATON;
 
         bool hasOnDpad = false;
         if (CVarGetInteger(CVAR_ENHANCEMENT("DpadEquips"), 0) != 0) {
@@ -3481,7 +3484,11 @@ void Player_UseItem(PlayState* play, Player* this, s32 item) {
                 if (this->currentMask != PLAYER_MASK_NONE) {
                     this->currentMask = PLAYER_MASK_NONE;
                 } else {
-                    this->currentMask = itemAction - PLAYER_IA_MASK_KEATON + 1;
+                    if ((item >= ITEM_MASK_STONE) && (item <= ITEM_MASK_FIERCE_DEITY)) {
+                        this->currentMask = PLAYER_MASK_MM_STONE + (item - ITEM_MASK_STONE); // ReBoom
+                    } else {
+                        this->currentMask = itemAction - PLAYER_IA_MASK_KEATON + 1;
+                    }
                 }
 
                 gSaveContext.ship.maskMemory = this->currentMask;
@@ -12563,7 +12570,7 @@ void Player_DrawGameplay(PlayState* play, Player* this, s32 lod, Gfx* cullDList,
         }
 
         if ((this->currentMask != PLAYER_MASK_BUNNY || !CVarGetInteger(CVAR_ENHANCEMENT("HideBunnyHood"), 0)) &&
-            (this->currentMask != PLAYER_MASK_KEATON)) { // ReBoom: la de Keaton la dibuja la prueba de Majora
+            (this->currentMask < PLAYER_MASK_MAX)) { // ReBoom: las de Majora se dibujan en la cabeza
             gSPDisplayList(POLY_OPA_DISP++, sMaskDlists[this->currentMask - 1]);
         }
 

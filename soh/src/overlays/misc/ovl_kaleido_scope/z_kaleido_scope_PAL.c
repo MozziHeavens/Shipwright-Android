@@ -1082,6 +1082,80 @@ u8 gItemAgeReqs[] = {
     AGE_REQ_NONE,  // ITEM_SCALE_SILVER
     AGE_REQ_NONE,  // ITEM_SCALE_GOLDEN
     AGE_REQ_ADULT, // ITEM_GIANTS_KNIFE
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_NONE,  // ReBoom: relleno 0x56-0x9B
+    AGE_REQ_CHILD, // ITEM_MASK_STONE
+    AGE_REQ_CHILD, // ITEM_MASK_KAMARO
+    AGE_REQ_CHILD, // ITEM_MASK_GREAT_FAIRY
+    AGE_REQ_CHILD, // ITEM_MASK_FIERCE_DEITY
 };
 
 u8 gAreaGsFlags[] = {
@@ -2474,6 +2548,14 @@ void KaleidoScope_UpdateNamePanel(PlayState* play) {
                 }
 
                 const char* textureName = mapNameTextures[sp2A];
+                memcpy(pauseCtx->nameSegment, textureName, strlen(textureName) + 1);
+            } else if ((pauseCtx->namedItem >= ITEM_MASK_STONE) && (pauseCtx->namedItem <= ITEM_MASK_FIERCE_DEITY)) {
+                // ReBoom: nombres de las mascaras de Majora
+                static const char* sReboomMaskNames[] = {
+                    "__OTR__textures/reboom/gReboomStoneMaskNameTex", "__OTR__textures/reboom/gReboomKamaroMaskNameTex",
+                    "__OTR__textures/reboom/gReboomGreatFairyMaskNameTex", "__OTR__textures/reboom/gReboomFierceDeityMaskNameTex"
+                };
+                const char* textureName = sReboomMaskNames[pauseCtx->namedItem - ITEM_MASK_STONE];
                 memcpy(pauseCtx->nameSegment, textureName, strlen(textureName) + 1);
             } else {
                 // #region SOH [NTSC] - There's a lot of OOB/Incorrect accesses that can occur so make sure sp2A selects

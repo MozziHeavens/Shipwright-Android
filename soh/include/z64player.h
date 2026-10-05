@@ -85,6 +85,14 @@ typedef enum PlayerMask {
     /* 0x09 */ PLAYER_MASK_MAX
 } PlayerMask;
 
+// ReBoom: mascaras de Majora (se dibujan aparte, en la cabeza)
+#define PLAYER_MASK_MM_STONE 0x10
+#define PLAYER_MASK_MM_KAMARO 0x11
+#define PLAYER_MASK_MM_GREAT_FAIRY 0x12
+#define PLAYER_MASK_MM_FIERCE_DEITY 0x13
+#define PLAYER_MASK_MM_MIN PLAYER_MASK_MM_STONE
+#define PLAYER_MASK_MM_MAX PLAYER_MASK_MM_FIERCE_DEITY
+
 typedef enum PlayerIdleType {
     /* -0x1 */ PLAYER_IDLE_CRIT_HEALTH = -1,
     /*  0x0 */ PLAYER_IDLE_DEFAULT,

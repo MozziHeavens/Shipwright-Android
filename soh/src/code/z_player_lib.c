@@ -790,7 +790,16 @@ s32 Player_GetStrength(void) {
 u8 Player_GetMask(PlayState* play) {
     Player* this = GET_PLAYER(play);
 
+    if (this->currentMask >= PLAYER_MASK_MAX) {
+        return PLAYER_MASK_NONE; // ReBoom: usar Player_GetMmMask para las de Majora
+    }
     return this->currentMask;
+}
+
+u8 Player_GetMmMask(PlayState* play) {
+    Player* this = GET_PLAYER(play);
+
+    return ((this->currentMask >= PLAYER_MASK_MM_MIN) && (this->currentMask <= PLAYER_MASK_MM_MAX)) ? this->currentMask : 0;
 }
 
 Player* Player_UnsetMask(PlayState* play) {
@@ -2011,13 +2020,16 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
             }
         } else if (limbIndex == PLAYER_LIMB_HEAD) {
             Matrix_MultVec3f(&D_801260D4, &this->actor.focus.pos);
-            // ReBoom: prueba mascara de Majora (la Mascara de Keaton se ve como la Mascara de Piedra)
-            if (this->currentMask == PLAYER_MASK_KEATON) {
-                static const char sReboomStoneMaskDL[] __attribute__((aligned(2))) =
-                    "__OTR__objects/object_mask_stone/object_mask_stone_DL_000820";
+            // ReBoom: mascaras de Majora, dibujadas en la cabeza como en Majora
+            if ((this->currentMask >= PLAYER_MASK_MM_MIN) && (this->currentMask <= PLAYER_MASK_MM_MAX)) {
+                static const char sDlStone[] __attribute__((aligned(8))) = "__OTR__objects/object_mask_stone/object_mask_stone_DL_000820";
+                static const char sDlKamaro[] __attribute__((aligned(8))) = "__OTR__objects/object_mask_dancer/object_mask_dancer_DL_000EF0";
+                static const char sDlFairy[] __attribute__((aligned(8))) = "__OTR__objects/object_mask_bigelf/object_mask_bigelf_DL_0016F0";
+                static const char sDlDeity[] __attribute__((aligned(8))) = "__OTR__objects/object_mask_boy/object_mask_boy_DL_000900";
+                static const char* sDls[] = { sDlStone, sDlKamaro, sDlFairy, sDlDeity };
                 OPEN_DISPS(play->state.gfxCtx);
                 gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
-                gSPDisplayList(POLY_OPA_DISP++, (Gfx*)sReboomStoneMaskDL);
+                gSPDisplayList(POLY_OPA_DISP++, (Gfx*)sDls[this->currentMask - PLAYER_MASK_MM_MIN]);
                 CLOSE_DISPS(play->state.gfxCtx);
             }
         } else {

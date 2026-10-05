@@ -306,6 +306,10 @@ typedef enum {
     /* 0x99 */ ITEM_STICK_UPGRADE_30,
     /* 0x9A */ ITEM_NUT_UPGRADE_30,
     /* 0x9B */ ITEM_NUT_UPGRADE_40,
+    /* 0x9C */ ITEM_MASK_STONE = 0x9C,     // ReBoom: mascaras de Majora
+    /* 0x9D */ ITEM_MASK_KAMARO,
+    /* 0x9E */ ITEM_MASK_GREAT_FAIRY,
+    /* 0x9F */ ITEM_MASK_FIERCE_DEITY,
     /* 0xFC */ ITEM_LAST_USED = 0xFC,
     /* 0xFE */ ITEM_NONE_FE = 0xFE,
     /* 0xFF */ ITEM_NONE = 0xFF
