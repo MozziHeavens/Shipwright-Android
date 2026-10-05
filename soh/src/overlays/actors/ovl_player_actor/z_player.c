@@ -12562,7 +12562,8 @@ void Player_DrawGameplay(PlayState* play, Player* this, s32 lod, Gfx* cullDList,
             MATRIX_TOMTX(bunnyEarMtx);
         }
 
-        if (this->currentMask != PLAYER_MASK_BUNNY || !CVarGetInteger(CVAR_ENHANCEMENT("HideBunnyHood"), 0)) {
+        if ((this->currentMask != PLAYER_MASK_BUNNY || !CVarGetInteger(CVAR_ENHANCEMENT("HideBunnyHood"), 0)) &&
+            (this->currentMask != PLAYER_MASK_KEATON)) { // ReBoom: la de Keaton la dibuja la prueba de Majora
             gSPDisplayList(POLY_OPA_DISP++, sMaskDlists[this->currentMask - 1]);
         }
 

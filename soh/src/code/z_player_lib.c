@@ -2011,6 +2011,15 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
             }
         } else if (limbIndex == PLAYER_LIMB_HEAD) {
             Matrix_MultVec3f(&D_801260D4, &this->actor.focus.pos);
+            // ReBoom: prueba mascara de Majora (la Mascara de Keaton se ve como la Mascara de Piedra)
+            if (this->currentMask == PLAYER_MASK_KEATON) {
+                static const char sReboomStoneMaskDL[] __attribute__((aligned(2))) =
+                    "__OTR__objects/object_mask_stone/object_mask_stone_DL_000820";
+                OPEN_DISPS(play->state.gfxCtx);
+                gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+                gSPDisplayList(POLY_OPA_DISP++, (Gfx*)sReboomStoneMaskDL);
+                CLOSE_DISPS(play->state.gfxCtx);
+            }
         } else {
             Vec3f* vec = &sLeftRightFootLimbModelFootPos[(gSaveContext.linkAge)];
 
