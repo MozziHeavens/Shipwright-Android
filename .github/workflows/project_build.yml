@@ -1,31 +1,16 @@
-###############################################################################
+name: Experimento Ship of Harkinian Universal
 
-name: Project Build
-
-###############################################################################
-
-# Trigger the jobs on:
-# - Manually from the Actions tab (Run workflow)
-# - A pull request is opened or a new commit is added to the pull request
-# - A new release is created or a release is edited
 on:
   workflow_dispatch:
-  pull_request:
-    types: [opened, synchronize]
-  release:
-    types: [published, edited]
+  push:
+    branches: [experimento-soh-universal]
 
-###############################################################################
-
-# Jobs to run
 jobs:
-
-  # Build the project and upload Release APK to Github artifacts
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -38,8 +23,6 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
+          name: soh-universal-apk
           path: |
             Android/app/build/outputs/apk/release/*.apk
-
-###############################################################################
