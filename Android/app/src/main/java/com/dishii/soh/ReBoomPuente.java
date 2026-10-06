@@ -180,6 +180,7 @@ public class ReBoomPuente {
         copiarAsset(ctx, "reboom/mods", new File("/sdcard/SOH/mods"));
         copiarAsset(ctx, "reboom/Characters", CHARS);
         copiarAsset(ctx, "reboom/Animals", new File(HYRULE, "Animals"));
+        copiarAsset(ctx, "reboom/raiz", HYRULE);
     }
 
     static void copiarAsset(Context ctx, String asset, File destino) {

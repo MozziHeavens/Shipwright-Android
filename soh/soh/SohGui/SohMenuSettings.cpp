@@ -1,3 +1,6 @@
+#ifdef __ANDROID__
+#include <sys/system_properties.h>
+#endif
 #include "SohMenu.h"
 #include "soh/Notification/Notification.h"
 #include <soh/GameVersions.h>
@@ -211,6 +214,44 @@ void SohMenu::AddMenuSettings() {
     path.column = SECTION_COLUMN_2;
 
     AddWidget(path, "About", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "ReBoom Experimental", WIDGET_TEXT);
+    AddWidget(path, "Hecho por Mozzi y Claude (y un Dodo revivido)", WIDGET_TEXT);
+    AddWidget(path, "Cualquier bug o falla, reportalo para mejorarlo a futuro. - El Dodo", WIDGET_TEXT);
+    AddWidget(path, "Reportar un bug", WIDGET_BUTTON)
+        .RaceDisable(false)
+        .Callback([](WidgetInfo& info) {
+            auto codificar = [](const std::string& s) {
+                static const char* hexd = "0123456789ABCDEF";
+                std::string r;
+                for (unsigned char c : s) {
+                    bool ok = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                              c == '-' || c == '_' || c == '.' || c == '~';
+                    if (ok) {
+                        r += (char)c;
+                    } else {
+                        r += '%';
+                        r += hexd[c >> 4];
+                        r += hexd[c & 15];
+                    }
+                }
+                return r;
+            };
+            std::string modelo = "(escribe aqui el modelo)";
+            std::string abi = "?";
+#ifdef __ANDROID__
+            char v[PROP_VALUE_MAX] = {0};
+            if (__system_property_get("ro.product.model", v) > 0) modelo = v;
+            char a[PROP_VALUE_MAX] = {0};
+            if (__system_property_get("ro.product.cpu.abi", a) > 0) abi = a;
+#endif
+            std::string cuerpo = "Hola Dodo!\n\n¿Qué pasó?\n\n\n¿Dónde estabas en el juego (lugar, día, personaje)?\n\n\n--- Datos ---\nTeléfono: " +
+                                 modelo + "\nArquitectura: " + abi + "\nVersión: ReBoom Experimental " +
+                                 std::string(gGitCommitHash).substr(0, 7) + "\n";
+            std::string url = "mailto:shadowdany181@gmail.com?subject=" + codificar("ReBoom Experimental - Reporte de bug") +
+                              "&body=" + codificar(cuerpo);
+            SDL_OpenURL(url.c_str());
+        })
+        .Options(ButtonOptions().Tooltip("Abre tu correo para mandarle el reporte al Dodo"));
     AddWidget(path, "Ship Of Harkinian", WIDGET_TEXT);
     if (gGitCommitTag[0] != 0) {
         AddWidget(path, gBuildVersion, WIDGET_TEXT);
