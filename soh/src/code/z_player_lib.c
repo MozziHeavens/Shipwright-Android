@@ -1787,6 +1787,170 @@ Vec3f sLeftRightFootLimbModelFootPos[] = {
 // started working out properly
 #define RETICLE_MAX 3.402823466e+12f
 
+// ReBoom: cabello de la Mascara de la Gran Hada (fisica copiada de Majora)
+typedef struct {
+    Vec3f pos;
+    Vec3f vel;
+    s16 yaw;
+    s16 pitch;
+} RbFairyHairPt;
+
+typedef struct {
+    f32 len;
+    s16 rotY;
+    s16 rotZ;
+    s16 maxYaw;
+    s16 maxPitch;
+} RbFairyHairSeg;
+
+static RbFairyHairPt sRbFairyHair[3][3];
+static u32 sRbFairyLastFrame = 0;
+
+static Vec3f sRbFairyRoot[3] = {
+    { 174.0f, -1269.0f, -1.0f },
+    { 401.0f, -729.0f, -701.0f },
+    { 401.0f, -729.0f, 699.0f },
+};
+static Vec3f sRbFairyDir[3] = {
+    { 74.0f, -1269.0f, -1.0f },
+    { 301.0f, -729.0f, -701.0f },
+    { 301.0f, -729.0f, 699.0f },
+};
+static RbFairyHairSeg sRbFairySegs[3] = {
+    { 0.0f, 0x0000, (s16)0x8000, 0x0000, 0x0000 },
+    { 16.8f, 0x0000, 0x0000, 0x1388, 0x1388 },
+    { 30.0f, 0x0000, 0x0000, 0x1F40, 0x2EE0 },
+};
+
+static s16 Rb_Atan2S_XY(f32 x, f32 y) {
+    return (s16)(s32)(Math_FAtan2F(y, x) * (32768.0f / M_PI));
+}
+
+static s16 Rb_ClampS(s16 v, s16 lim) {
+    return (v < -lim) ? -lim : ((v > lim) ? lim : v);
+}
+
+static f32 Rb_ClampF(f32 v, f32 lo, f32 hi) {
+    return (v < lo) ? lo : ((v > hi) ? hi : v);
+}
+
+static void Rb_FairyHairUpdate(RbFairyHairPt* pt, RbFairyHairSeg* seg, Vec3f* root, Vec3f* dir) {
+    RbFairyHairPt* nx = &pt[1];
+    Vec3f d;
+    Vec3f off;
+    f32 dist, stretch, horiz, a, b;
+    s16 dYaw, dPitch;
+    s32 i;
+
+    Math_Vec3f_Copy(&pt->pos, root);
+    Math_Vec3f_Diff(dir, root, &d);
+    pt->yaw = Rb_Atan2S_XY(d.z, d.x);
+    pt->pitch = Rb_Atan2S_XY(sqrtf((d.x * d.x) + (d.z * d.z)), d.y);
+    seg++;
+
+    for (i = 1; i < 3; i++, pt++, nx++, seg++) {
+        Math_Vec3f_Sum(&nx->pos, &nx->vel, &nx->pos);
+        Math_Vec3f_Diff(&nx->pos, &pt->pos, &d);
+        dist = sqrtf((d.x * d.x) + (d.y * d.y) + (d.z * d.z));
+        stretch = dist - seg->len;
+        if (dist == 0.0f) {
+            d.x = 0.0f;
+            d.y = seg->len;
+            d.z = 0.0f;
+        }
+        horiz = sqrtf((d.x * d.x) + (d.z * d.z));
+        if (horiz > 4.0f) {
+            nx->yaw = Rb_Atan2S_XY(d.z, d.x);
+            dYaw = nx->yaw - pt->yaw;
+            if ((dYaw > 0x4000) || (dYaw < -0x4000)) {
+                nx->yaw = (s16)(nx->yaw + 0x8000);
+                horiz = -horiz;
+            }
+        }
+        nx->pitch = Rb_Atan2S_XY(horiz, d.y);
+
+        dYaw = Rb_ClampS((s16)(nx->yaw - pt->yaw), seg->maxYaw);
+        nx->yaw = pt->yaw + dYaw;
+        dPitch = Rb_ClampS((s16)(nx->pitch - pt->pitch), seg->maxPitch);
+        nx->pitch = pt->pitch + dPitch;
+
+        horiz = Math_CosS(nx->pitch) * seg->len;
+        off.x = Math_SinS(nx->yaw) * horiz;
+        off.z = Math_CosS(nx->yaw) * horiz;
+        off.y = Math_SinS(nx->pitch) * seg->len;
+        Math_Vec3f_Sum(&pt->pos, &off, &nx->pos);
+        nx->vel.x *= 0.9f;
+        nx->vel.z *= 0.9f;
+
+        a = Math_CosS(dPitch) * stretch;
+        b = Math_SinS(dPitch) * stretch;
+        nx->vel.y += -1.0f;
+        nx->vel.y += ((a * Math_CosS(pt->pitch)) + (b * Math_SinS(pt->pitch))) * 0.2f;
+        nx->vel.y = Rb_ClampF(nx->vel.y, -2.0f, 4.0f);
+
+        horiz = (b * Math_CosS(pt->pitch)) - (Math_SinS(pt->pitch) * a);
+        a = Math_CosS(dYaw) * horiz;
+        b = Math_SinS(dYaw) * horiz;
+        nx->vel.x += ((b * Math_CosS(pt->yaw)) - (a * Math_SinS(pt->yaw))) * 0.1f;
+        nx->vel.x = Rb_ClampF(nx->vel.x, -4.0f, 4.0f);
+        nx->vel.z += ((a * Math_CosS(pt->yaw)) + (b * Math_SinS(pt->yaw))) * -0.1f;
+        nx->vel.z = Rb_ClampF(nx->vel.z, -4.0f, 4.0f);
+    }
+}
+
+static void Rb_FairyHairToMtx(RbFairyHairPt* pt, RbFairyHairSeg* seg, Mtx** mtx) {
+    RbFairyHairPt* nx = &pt[1];
+    Vec3f t;
+    Vec3s r;
+    s32 i;
+
+    t.y = 0.0f;
+    t.z = 0.0f;
+    r.x = 0;
+    for (i = 1; i < 3; i++, pt++, nx++, seg++) {
+        t.x = seg->len * 100.0f;
+        r.z = seg->rotZ + (s16)(nx->pitch - pt->pitch);
+        r.y = seg->rotY + (s16)(nx->yaw - pt->yaw);
+        Matrix_TranslateRotateZYX(&t, &r);
+        MATRIX_TOMTX(*mtx);
+        (*mtx)++;
+    }
+}
+
+static void ReBoom_DrawGreatFairyHair(PlayState* play, Player* this) {
+    Mtx* mtx = Graph_Alloc(play->state.gfxCtx, 6 * sizeof(Mtx));
+    Vec3f root;
+    Vec3f dir;
+    s32 i, j;
+
+    // Si la mascara se acaba de poner (o se volvio a dibujar), el cabello empieza en la cabeza
+    if ((u32)(play->gameplayFrames - sRbFairyLastFrame) > 2) {
+        Matrix_MultVec3f(&sRbFairyRoot[0], &root);
+        for (i = 0; i < 3; i++) {
+            for (j = 0; j < 3; j++) {
+                Math_Vec3f_Copy(&sRbFairyHair[i][j].pos, &root);
+                sRbFairyHair[i][j].vel.x = sRbFairyHair[i][j].vel.y = sRbFairyHair[i][j].vel.z = 0.0f;
+                sRbFairyHair[i][j].yaw = sRbFairyHair[i][j].pitch = 0;
+            }
+        }
+    }
+    sRbFairyLastFrame = play->gameplayFrames;
+
+    OPEN_DISPS(play->state.gfxCtx);
+    gSPSegment(POLY_OPA_DISP++, 0x0B, mtx);
+    CLOSE_DISPS(play->state.gfxCtx);
+
+    for (i = 0; i < 3; i++) {
+        Matrix_MultVec3f(&sRbFairyRoot[i], &root);
+        Matrix_MultVec3f(&sRbFairyDir[i], &dir);
+        Rb_FairyHairUpdate(sRbFairyHair[i], sRbFairySegs, &root, &dir);
+        Matrix_Push();
+        Matrix_Translate(sRbFairyRoot[i].x, sRbFairyRoot[i].y, sRbFairyRoot[i].z, MTXMODE_APPLY);
+        Rb_FairyHairToMtx(sRbFairyHair[i], sRbFairySegs, &mtx);
+        Matrix_Pop();
+    }
+}
+
 void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx) {
     Player* this = (Player*)thisx;
 
@@ -2027,6 +2191,9 @@ void Player_PostLimbDrawGameplay(PlayState* play, s32 limbIndex, Gfx** dList, Ve
                 static const char sDlFairy[] __attribute__((aligned(8))) = "__OTR__objects/object_mask_bigelf/object_mask_bigelf_DL_0016F0";
                 static const char sDlDeity[] __attribute__((aligned(8))) = "__OTR__objects/object_mask_boy/object_mask_boy_DL_000900";
                 static const char* sDls[] = { sDlStone, sDlKamaro, sDlFairy, sDlDeity };
+                if (this->currentMask == PLAYER_MASK_MM_GREAT_FAIRY) {
+                    ReBoom_DrawGreatFairyHair(play, this); // ReBoom: cabello de la Gran Hada
+                }
                 OPEN_DISPS(play->state.gfxCtx);
                 gSPMatrix(POLY_OPA_DISP++, MATRIX_NEWMTX(play->state.gfxCtx), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
                 gSPDisplayList(POLY_OPA_DISP++, (Gfx*)sDls[this->currentMask - PLAYER_MASK_MM_MIN]);
