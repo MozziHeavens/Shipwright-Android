@@ -57,6 +57,9 @@ public class ReBoomPuente {
     static volatile String model = "gemini-2.5-flash-lite";
     static volatile List<Personaje> personajes = new ArrayList<>();
     static boolean iniciado = false;
+    static SharedPreferences prefs;
+    static final String[] MODELOS = {"gemini-3.1-flash-lite", "gemini-flash-lite-latest", "gemini-3.5-flash-lite",
+            "gemini-3.5-flash", "gemini-2.5-flash-lite"};
     static final Random RND = new Random();
     static final Map<Integer, String> TEXTOS = new HashMap<>();
 
@@ -109,21 +112,25 @@ public class ReBoomPuente {
         if (iniciado) return;
         iniciado = true;
         final SharedPreferences sp = act.getSharedPreferences("reboom_ia", Context.MODE_PRIVATE);
+        prefs = sp;
         apiKey = sp.getString("api_key", "");
         model = sp.getString("model", model);
 
         Thread principal = new Thread(() -> {
             // Esperar el permiso de archivos y tomar la clave de config_ia.json si existe
             for (int i = 0; i < 90 && !HYRULE.isDirectory(); i++) dormir(1000);
-            if (apiKey.isEmpty()) {
-                JSONObject cfg = rObj(new File(HYRULE, "config_ia.json"));
-                String k = cfg.optString("api_key", "").trim();
-                if (!k.isEmpty()) {
-                    apiKey = k;
-                    model = cfg.optString("model", model);
-                    sp.edit().putString("api_key", k).putString("model", model).putBoolean("preguntado", true).apply();
-                    log("Clave tomada de config_ia.json");
-                }
+            // config_ia.json manda: si tiene clave, se usa (asi puedes cambiarla editando el archivo)
+            File fcfg = new File(HYRULE, "config_ia.json");
+            JSONObject cfg = new JSONObject();
+            for (int i = 0; i < 120 && !tienePermiso(); i++) dormir(1000); // esperar permiso de archivos
+            cfg = rObj(fcfg);
+            String k = cfg.optString("api_key", "").trim();
+            if (!k.isEmpty() && !k.equals(apiKey)) {
+                apiKey = k;
+                String mc = cfg.optString("model", "").trim();
+                if (!mc.isEmpty()) model = mc;
+                sp.edit().putString("api_key", k).putString("model", model).putBoolean("preguntado", true).apply();
+                log("Clave tomada de config_ia.json");
             }
             if (apiKey.isEmpty() && !sp.getBoolean("preguntado", false)) {
                 act.runOnUiThread(() -> pedirClave(act, sp));
@@ -137,6 +144,11 @@ public class ReBoomPuente {
         Thread historias = new Thread(ReBoomPuente::bucleHistorias, "ReBoomIA-historias");
         historias.setDaemon(true);
         historias.start();
+    }
+
+    static boolean tienePermiso() {
+        if (android.os.Build.VERSION.SDK_INT >= 30) return android.os.Environment.isExternalStorageManager();
+        return HYRULE.canRead();
     }
 
     static void pedirClave(final Activity act, final SharedPreferences sp) {
@@ -565,9 +577,31 @@ public class ReBoomPuente {
     static String gemini(String prompt, int timeoutMs) {
         String key = apiKey;
         if (key == null || key.isEmpty()) return "";
+        List<String> orden = new ArrayList<>();
+        orden.add(model);
+        for (String m : MODELOS) if (!orden.contains(m)) orden.add(m);
+        for (String m : orden) {
+            String[] resp = new String[1];
+            int code = llamarGemini(m, key, prompt, timeoutMs, resp);
+            if (code == 200) {
+                if (!m.equals(model)) {
+                    model = m;
+                    if (prefs != null) prefs.edit().putString("model", m).apply();
+                    log("Modelo de IA: " + m);
+                }
+                return resp[0];
+            }
+            if (code != 404) return ""; // otro error (red, cuota, clave): no seguir probando
+            log("Gemini 404 con " + m + ", probando otro modelo");
+        }
+        return "";
+    }
+
+    static int llamarGemini(String m, String key, String prompt, int timeoutMs, String[] out) {
         HttpURLConnection c = null;
+        out[0] = "";
         try {
-            URL u = new URL("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent");
+            URL u = new URL("https://generativelanguage.googleapis.com/v1beta/models/" + m + ":generateContent");
             c = (HttpURLConnection) u.openConnection();
             c.setRequestMethod("POST");
             c.setConnectTimeout(timeoutMs);
@@ -583,14 +617,15 @@ public class ReBoomPuente {
             }
             int code = c.getResponseCode();
             if (code != 200) {
-                log("Gemini respondio " + code);
-                return "";
+                log("Gemini respondio " + code + " (" + m + ")");
+                return code;
             }
             String r = leerStream(c.getInputStream());
-            return new JSONObject(r).getJSONArray("candidates").getJSONObject(0)
+            out[0] = new JSONObject(r).getJSONArray("candidates").getJSONObject(0)
                     .getJSONObject("content").getJSONArray("parts").getJSONObject(0).getString("text");
+            return 200;
         } catch (Exception e) {
-            return "";
+            return -1;
         } finally {
             if (c != null) c.disconnect();
         }
