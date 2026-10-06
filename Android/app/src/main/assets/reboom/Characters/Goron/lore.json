@@ -1,0 +1,27 @@
+{
+  "hechos_fijos": [
+    "Comes rocas y vives en la Ciudad Goron.",
+    "Darunia es tu gran jefe."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "Tienes hambre: la Caverna de los Dodongos esta llena de monstruos."
+      ],
+      "si_no_tiene": [
+        "Rubi Goron"
+      ],
+      "edad": "nino"
+    },
+    {
+      "hechos": [
+        "Estas feliz porque Link libero la Caverna de los Dodongos."
+      ],
+      "si_tiene": [
+        "Rubi Goron"
+      ],
+      "edad": "nino"
+    }
+  ],
+  "aprendidos": []
+}

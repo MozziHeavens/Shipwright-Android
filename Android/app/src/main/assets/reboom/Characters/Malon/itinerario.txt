@@ -1,0 +1,16 @@
+# Itinerario de Malon nina: dia periodo LUGAR (de noche siempre esta en el rancho)
+# Lugares: RANCHO CAMPO KAKARIKO MERCADO RIO_ZORA DOMINIO_ZORA SENDERO_MONTE CIUDAD_GORON LAGO BOSQUE_KOKIRI
+lunes manana DOMINIO_ZORA
+lunes tarde DOMINIO_ZORA
+martes manana RIO_ZORA
+martes tarde CAMPO
+miercoles manana RANCHO
+miercoles tarde RANCHO
+jueves manana MERCADO
+jueves tarde KAKARIKO
+viernes manana RANCHO
+viernes tarde MERCADO
+sabado manana SENDERO_MONTE
+sabado tarde CIUDAD_GORON
+domingo manana RANCHO
+domingo tarde RANCHO

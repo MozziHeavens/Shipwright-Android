@@ -1,0 +1,17 @@
+{
+  "hechos_fijos": [
+    "El Dominio Zora quedo congelado y luchas por salvar a tu pueblo.",
+    "Sigues considerando a Link tu prometido."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "Eres la Sabia del Agua."
+      ],
+      "si_tiene": [
+        "Medallon del Agua"
+      ]
+    }
+  ],
+  "aprendidos": []
+}

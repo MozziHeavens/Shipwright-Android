@@ -1,0 +1,18 @@
+{
+  "hechos_fijos": [
+    "Eres la princesa de Hyrule. Impa es tu protectora.",
+    "Tienes visiones de que Ganondorf, el rey del desierto, es malvado.",
+    "Confias en el chico del bosque que llego con un hada."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "Ya le diste tu carta a Link para que los guardias lo dejen pasar."
+      ],
+      "si_tiene": [
+        "Carta de Zelda"
+      ]
+    }
+  ],
+  "aprendidos": []
+}

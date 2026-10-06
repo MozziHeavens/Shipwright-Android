@@ -1,0 +1,14 @@
+{
+  "hechos_fijos": [
+    "Vives en la ciudadela de Hyrule y te encantan los chismes."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "Huiste a la aldea Kakariko cuando la ciudadela cayo."
+      ],
+      "edad": "adulto"
+    }
+  ],
+  "aprendidos": []
+}

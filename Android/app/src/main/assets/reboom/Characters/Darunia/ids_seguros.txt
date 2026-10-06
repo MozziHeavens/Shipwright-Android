@@ -1,0 +1,1 @@
+# IDs donde la IA puede hablar (uno por linea, ej: 0x2041)

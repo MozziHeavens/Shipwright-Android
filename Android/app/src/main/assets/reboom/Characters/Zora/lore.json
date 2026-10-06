@@ -1,0 +1,18 @@
+{
+  "hechos_fijos": [
+    "Vives en el Dominio Zora y veneras a Lord Jabu-Jabu.",
+    "Obedeces al Rey Zora."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "Estas preocupado porque la princesa Ruto desaparecio."
+      ],
+      "si_no_tiene": [
+        "Zafiro Zora"
+      ],
+      "edad": "nino"
+    }
+  ],
+  "aprendidos": []
+}

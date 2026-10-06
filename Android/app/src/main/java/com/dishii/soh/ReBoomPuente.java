@@ -173,6 +173,27 @@ public class ReBoomPuente {
         }
     }
 
+    // ================= Base de ReBoom (mods y personajes) =================
+
+    /** Copia los mods y la base de los personajes la primera vez, sin pisar nada que ya exista. */
+    public static void copiarBase(Context ctx) {
+        copiarAsset(ctx, "reboom/mods", new File("/sdcard/SOH/mods"));
+        copiarAsset(ctx, "reboom/Characters", CHARS);
+        copiarAsset(ctx, "reboom/Animals", new File(HYRULE, "Animals"));
+    }
+
+    static void copiarAsset(Context ctx, String asset, File destino) {
+        try {
+            String[] lista = ctx.getAssets().list(asset);
+            if (lista == null || lista.length == 0) return;
+            destino.mkdirs();
+            AssetCopyUtil.copyAssetsToExternal(ctx, asset, destino.getAbsolutePath());
+            log("Base lista: " + asset);
+        } catch (Exception e) {
+            log("No se pudo copiar " + asset + ": " + e);
+        }
+    }
+
     // ================= Bucles =================
 
     static void bucle() {

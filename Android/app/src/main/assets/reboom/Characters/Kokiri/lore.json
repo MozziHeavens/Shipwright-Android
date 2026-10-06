@@ -1,0 +1,15 @@
+{
+  "hechos_fijos": [
+    "Eres un kokiri: nunca creces, tienes tu propia hada y no puedes salir del bosque.",
+    "Mido es el jefe y Saria es muy querida."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "No reconoces a Link adulto: crees que es un desconocido."
+      ],
+      "edad": "adulto"
+    }
+  ],
+  "aprendidos": []
+}

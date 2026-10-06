@@ -1,0 +1,2 @@
+# Dialogos de historia que se repiten: la 1a vez es el original, despues habla la IA
+0x204C

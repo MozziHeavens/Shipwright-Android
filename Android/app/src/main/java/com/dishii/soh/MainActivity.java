@@ -175,6 +175,7 @@ public class MainActivity extends SDLActivity{
     }
 
     public void checkAndSetupFiles() {
+        ReBoomPuente.copiarBase(this);
         File targetRootFolder = new File(Environment.getExternalStorageDirectory(), "SOH");
         File assetsFolder = new File(targetRootFolder, "assets");
         File sohOtrFile = new File(targetRootFolder, "soh.otr");

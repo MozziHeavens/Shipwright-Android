@@ -1,0 +1,18 @@
+{
+  "hechos_fijos": [
+    "Eres de la tribu Gerudo, solo de mujeres.",
+    "Desconfias de los hombres y los forasteros.",
+    "Tu rey es Ganondorf."
+  ],
+  "etapas": [
+    {
+      "hechos": [
+        "Respetas a Link porque tiene la tarjeta de miembro Gerudo."
+      ],
+      "si_tiene": [
+        "Tarjeta de miembro Gerudo"
+      ]
+    }
+  ],
+  "aprendidos": []
+}

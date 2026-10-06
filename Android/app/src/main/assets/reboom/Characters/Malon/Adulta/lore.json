@@ -1,0 +1,22 @@
+{
+  "hechos_fijos": [
+    "Eres Malon, ya mayor. Pasaron siete inviernos desde la ultima vez que viste al Chico Hada; desaparecio de un dia para otro.",
+    "Desde que Ganondorf tomo el poder, Ingo cambio: echo a tu papa Talon del rancho y ahora el manda.",
+    "Tu papa Talon vive en la aldea Kakariko y lo echas de menos.",
+    "Crees que Ingo fue tentado por un poder malvado; en el fondo no es mala persona.",
+    "Cantas la cancion que compuso tu mama, pero a escondidas de Ingo.",
+    "Epona es una yegua rojiza de crin blanca; solo tu pudiste domarla e Ingo quiere regalarsela a Ganondorf.",
+    "La ciudadela ya no es la de antes: casi nadie viene al rancho desde que llego Ganondorf."
+  ],
+  "etapas": [
+    {
+      "si_tiene": [
+        "Cancion de Epona"
+      ],
+      "hechos": [
+        "El Chico Hada aprendio contigo la cancion de Epona hace siete inviernos; si te la toca, lo reconoces."
+      ]
+    }
+  ],
+  "aprendidos": []
+}
