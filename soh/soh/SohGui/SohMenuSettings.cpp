@@ -211,6 +211,8 @@ void SohMenu::AddMenuSettings() {
     path.column = SECTION_COLUMN_2;
 
     AddWidget(path, "About", WIDGET_SEPARATOR_TEXT);
+    AddWidget(path, "Hecho por Mozzi y Claude (y un Dodo revivido)", WIDGET_TEXT);
+    AddWidget(path, "Port original: Harbour Masters | Android: Waterdish", WIDGET_TEXT);
     AddWidget(path, "Ship Of Harkinian", WIDGET_TEXT);
     if (gGitCommitTag[0] != 0) {
         AddWidget(path, gBuildVersion, WIDGET_TEXT);
