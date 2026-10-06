@@ -62,6 +62,7 @@ public class MainActivity extends SDLActivity{
 
         setupControllerOverlay();
         attachController();
+        ReBoomPuente.iniciar(this);
     }
 
     public static void waitForSetupFromNative() {
